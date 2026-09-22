@@ -907,5 +907,33 @@
     "file": "assets/manual_figures/fig_6_30.png",
     "width": 990,
     "height": 419
+  },
+  "[그림 3-16]": {
+    "caption": "[그림 3-16] 복권 발전기의 계자권선 배치",
+    "page": 42,
+    "file": "assets/manual_figures/fig_3_16.png",
+    "w": 1200,
+    "h": 675
+  },
+  "[그림 4-7]": {
+    "caption": "[그림 4-7] 영구자석 직류 발전기 측정 회로도",
+    "page": 70,
+    "file": "assets/manual_figures/fig_4_7.png",
+    "w": 1200,
+    "h": 675
+  },
+  "[그림 4-23]": {
+    "caption": "[그림 4-23] 모듈 구성",
+    "page": 127,
+    "file": "assets/manual_figures/fig_4_23.png",
+    "w": 900,
+    "h": 1200
+  },
+  "[그림 6-27]": {
+    "caption": "[그림 6-27] 반발 전동기의 극성 전환 실험 회로",
+    "page": 238,
+    "file": "assets/manual_figures/fig_6_27.png",
+    "w": 1200,
+    "h": 675
   }
 }
