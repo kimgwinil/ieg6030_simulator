@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>IEG-6030 Coordinate Calibrator</title>
+  <style>
+    body { background: #111; color: #fff; font-family: monospace; padding: 20px; }
+    .wrap { display: flex; gap: 20px; }
+    .img-box { position: relative; display: inline-block; border: 2px solid red; }
+    img { display: block; max-height: 800px; }
+    #coord { position: fixed; top: 10px; right: 10px; background: rgba(0,0,0,0.85); padding: 15px; border: 1px solid #38bdf8; font-size: 14px; z-index: 999; }
+    .marker { position: absolute; width: 8px; height: 8px; background: yellow; border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; }
+  </style>
+</head>
+<body>
+  <div id="coord">X: 0%, Y: 0% | Px: 0, 0</div>
+  <select id="sel" onchange="changeImg(this.value)" style="font-size:16px; margin-bottom:15px; padding:6px;">
+    <option value="mod_01_field_rheostat.png">01. Field Rheostat</option>
+    <option value="mod_02_starting_rheostat.png">02. Starting Rheostat</option>
+    <option value="mod_03_load_unit.png">03. Load Unit</option>
+    <option value="mod_04_3phase_load.png">04. 3-Phase Load</option>
+    <option value="mod_05_rlc_load.png">05. RLC Load</option>
+    <option value="mod_06_power_supply.png">06. Power Supply</option>
+    <option value="mod_07_ac_meter.png">07. AC Meter</option>
+    <option value="mod_08_dc_meter.png">08. DC Meter</option>
+    <option value="mod_09_dc_galvano.png">09. DC Galvano</option>
+    <option value="mod_10_field_frame.png">10. Field Frame</option>
+    <option value="mod_11_auto_driving.png">11. Auto Driving</option>
+    <option value="mod_12_pole_changing.png">12. Pole Changing</option>
+  </select>
+  <div class="wrap">
+    <div class="img-box" id="box">
+      <img id="img" src="assets/modules/mod_01_field_rheostat.png">
+    </div>
+    <div style="flex:1;">
+      <h3>Clicked Coordinates:</h3>
+      <textarea id="log" style="width:100%; height:400px; background:#222; color:#a7f3d0; font-family:monospace; padding:10px;"></textarea>
+    </div>
+  </div>
+
+  <script>
+    const img = document.getElementById('img');
+    const box = document.getElementById('box');
+    const coord = document.getElementById('coord');
+    const log = document.getElementById('log');
+
+    function changeImg(src) {
+      img.src = 'assets/modules/' + src;
+    }
+
+    img.addEventListener('mousemove', (e) => {
+      const rect = img.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const xPct = ((x / rect.width) * 100).toFixed(1);
+      const yPct = ((y / rect.height) * 100).toFixed(1);
+      const natX = Math.round((x / rect.width) * img.naturalWidth);
+      const natY = Math.round((y / rect.height) * img.naturalHeight);
+      coord.textContent = `Screen: (${x.toFixed(0)}, ${y.toFixed(0)}) | Natural: (${natX}, ${natY}) | Pct: x: ${xPct}%, y: ${yPct}%`;
+    });
+
+    img.addEventListener('click', (e) => {
+      const rect = img.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const xPct = ((x / rect.width) * 100).toFixed(1);
+      const yPct = ((y / rect.height) * 100).toFixed(1);
+      const natX = Math.round((x / rect.width) * img.naturalWidth);
+      const natY = Math.round((y / rect.height) * img.naturalHeight);
+      
+      const m = document.createElement('div');
+      m.className = 'marker';
+      m.style.left = x + 'px';
+      m.style.top = y + 'px';
+      box.appendChild(m);
+
+      log.value += `{ x: ${xPct}, y: ${yPct} }, // px: (${natX}, ${natY})\n`;
+    });
+  </script>
+</body>
+</html>

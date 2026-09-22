@@ -1,0 +1,402 @@
+/* IEG-6030 전기기계 구조 실습 시뮬레이터 - 메인 스타일 */
+:root {
+  --bg-dark: #0f172a;
+  --bg-panel: #1e293b;
+  --bg-card: #334155;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --accent: #f59e0b;
+  --danger: #ef4444;
+  --success: #10b981;
+  --border-color: #475569;
+  --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+}
+
+body {
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  font-family: var(--font-family);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* 상단 메인 네비게이션 헤더 */
+.app-header {
+  height: 56px;
+  background: #1e293b;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-badge {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #000;
+  font-weight: 900;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+}
+
+.brand-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.3px;
+}
+
+.brand-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 400;
+  margin-left: 4px;
+}
+
+/* 4단계 학습 모드 탭 */
+.curriculum-tabs {
+  display: flex;
+  background: #0f172a;
+  border-radius: 8px;
+  padding: 4px;
+  gap: 4px;
+}
+
+.curriculum-tab-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 6px 16px;
+  font-size: 13.5px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.curriculum-tab-btn:hover {
+  color: #fff;
+  background: rgba(255,255,255,0.05);
+}
+
+.curriculum-tab-btn.active {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.4);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* 툴바 */
+.top-toolbar {
+  min-height: 48px;
+  background: #182234;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 4px 16px;
+  flex-shrink: 0;
+  gap: 16px;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* RUN / STOP 제어 툴바 그룹 */
+.run-control-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #0f172a;
+  padding: 3px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.btn-run {
+  background: #16a34a !important;
+  border-color: #15803d !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  box-shadow: 0 2px 6px rgba(22, 163, 74, 0.4);
+  cursor: pointer;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+.btn-run:hover {
+  background: #15803d !important;
+  transform: translateY(-1px);
+}
+.btn-run.active {
+  box-shadow: 0 0 12px #22c55e;
+  border-color: #86efac !important;
+}
+
+.btn-stop {
+  background: #dc2626 !important;
+  border-color: #b91c1c !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.4);
+  cursor: pointer;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+.btn-stop:hover {
+  background: #b91c1c !important;
+  transform: translateY(-1px);
+}
+.btn-stop.active {
+  box-shadow: 0 0 12px #ef4444;
+  border-color: #fca5a5 !important;
+}
+
+.run-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  transition: all 0.2s ease;
+  user-select: none;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+
+.run-status-badge.running {
+  background: rgba(22, 163, 74, 0.2);
+  color: #4ade80;
+  border: 1px solid rgba(74, 222, 128, 0.5);
+}
+
+.run-status-badge.running .status-indicator-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 8px #4ade80;
+  animation: pulse-dot 1.2s infinite ease-in-out;
+}
+
+.run-status-badge.stopped {
+  background: rgba(100, 116, 139, 0.2);
+  color: #94a3b8;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.run-status-badge.stopped .status-indicator-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #64748b;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.6; }
+}
+
+.toolbar-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+
+.select-input {
+  background: #0f172a;
+  color: #f8fafc;
+  border: 1px solid var(--border-color);
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 500;
+  outline: none;
+  cursor: pointer;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+
+.btn {
+  background: #334155;
+  color: #fff;
+  border: 1px solid var(--border-color);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  line-height: 1 !important;
+}
+
+.btn:hover {
+  background: #475569;
+}
+
+.btn-primary {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+.btn-primary:hover {
+  background: var(--primary-hover);
+}
+
+.btn-danger {
+  background: #dc2626;
+  border-color: #dc2626;
+}
+.btn-danger:hover {
+  background: #b91c1c;
+}
+
+.btn-sm {
+  padding: 5px 10px;
+  font-size: 12px;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+
+/* 전선 색상 팔레트 */
+.wire-palette {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+}
+
+/* 전선 색상 선택 팔레트 (가로형 명칭 표기 뱃지) */
+.wire-color-palette {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 5px;
+  background: #0f172a;
+  padding: 3px 6px;
+  border-radius: 6px;
+  border: 1px solid #334155;
+}
+
+.wire-chip-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  color: #cbd5e1;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.wire-chip-btn:hover {
+  background: #334155;
+  color: #fff;
+  border-color: #64748b;
+}
+
+.wire-chip-btn.active {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #38bdf8;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
+}
+
+.wire-chip-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 4px rgba(0,0,0,0.6);
+  flex-shrink: 0;
+}
+
+/* 레거시 호환용 wire-chip */
+.wire-chip {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.wire-chip:hover {
+  transform: scale(1.15);
+}
+
+.wire-chip.active {
+  border-color: #fff;
+  transform: scale(1.25);
+  box-shadow: 0 0 8px rgba(255,255,255,0.7);
+}
+
+/* 메인 뷰 컨테이너 */
+.main-content-area {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.view-section {
+  display: none !important;
+  width: 100%;
+  height: 100%;
+}
+
+.view-section.active {
+  display: flex !important;
+}

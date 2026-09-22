@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IEG-6030 전기기계 구조 실습 시뮬레이터</title>
+  <!-- 스타일시트 로드 -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/workbench.css">
+  <link rel="stylesheet" href="css/curriculum.css">
+</head>
+<body>
+
+  <!-- 1. 상단 메인 헤더 -->
+  <header class="app-header">
+    <div class="header-brand">
+      <span class="brand-badge">IEG 6030</span>
+      <h1 class="brand-title">전기기계 구조 가상 실습 시스템</h1>
+      <span class="brand-sub">Electrical Machine Simulator</span>
+    </div>
+
+    <!-- 4단계 학습 모드 탭 -->
+    <nav class="curriculum-tabs">
+      <button class="curriculum-tab-btn" data-tab="theory">
+        <span>📖</span> 교재 매뉴얼 (전권 수록)
+      </button>
+      <button class="curriculum-tab-btn active" data-tab="workbench">
+        <span>⚙️</span> 실습 장비
+      </button>
+      <button class="curriculum-tab-btn" data-tab="evaluation">
+        <span>📝</span> 실습 평가
+      </button>
+      <button class="curriculum-tab-btn" data-tab="feedback">
+        <span>📊</span> 결과 피드백
+      </button>
+    </nav>
+
+    <div class="header-actions">
+      <button class="btn btn-sm" onclick="alert('IEG-6030 전기기계 구조 실습장비 통합 시뮬레이터')">ℹ️ 시스템 안내</button>
+    </div>
+  </header>
+
+  <!-- 2. 상단 툴바 (실습 워크벤치 제어) -->
+  <div class="top-toolbar">
+    <div class="toolbar-group">
+      <span class="toolbar-label">실습 과제:</span>
+      <select id="exp_select" class="select-input"></select>
+      <button id="btn_auto_wire" class="btn btn-sm btn-primary" title="매뉴얼 권장 배선을 자동으로 연결합니다">⚡ 정답 배선 연결</button>
+      <button id="btn_clear_wires" class="btn btn-sm btn-danger" title="모든 전선을 제거합니다">🗑️ 배선 초기화</button>
+      
+      <!-- 명확한 RUN / STOP 제어 패널 -->
+      <div class="run-control-box">
+        <button id="btn_run" class="btn btn-sm btn-run" title="전동기/발전기 운전을 시작합니다 (RUN)">
+          ▶️ RUN (운전)
+        </button>
+        <button id="btn_stop" class="btn btn-sm btn-stop" title="모든 운전 및 회전을 즉시 정지합니다 (STOP)">
+          ⏹️ STOP (정지)
+        </button>
+        <div id="run_status_badge" class="run-status-badge stopped" title="실시간 운전/정지 상태">
+          <span class="status-indicator-dot"></span>
+          <span class="status-text">STOPPED</span>
+        </div>
+      </div>
+      <button id="btn_toggle_run" style="display:none;"></button>
+    </div>
+
+    <div class="toolbar-group">
+      <span class="toolbar-label">배선 정렬:</span>
+      <select id="routing_mode_select" class="select-input" title="장비를 가리지 않는 스마트 덕트 정렬 및 현수선 모드">
+        <option value="SMART_DUCT">스마트 덕트 정렬</option>
+        <option value="CATENARY">자연스러운 현수선</option>
+        <option value="MANHATTAN">직각 맨해튼 배선</option>
+      </select>
+
+      <span class="toolbar-label">전선 색상:</span>
+      <div class="wire-color-palette" id="wire_color_palette">
+        <button type="button" class="wire-chip-btn active" data-color="#e63946" title="적색 (+/R상)">
+          <span class="wire-chip-dot" style="background:#e63946;"></span>
+          <span>적색 (+)</span>
+        </button>
+        <button type="button" class="wire-chip-btn" data-color="#2563eb" title="청색 (S상)">
+          <span class="wire-chip-dot" style="background:#2563eb;"></span>
+          <span>청색 (S)</span>
+        </button>
+        <button type="button" class="wire-chip-btn" data-color="#f59e0b" title="황색 (T상)">
+          <span class="wire-chip-dot" style="background:#f59e0b;"></span>
+          <span>황색 (T)</span>
+        </button>
+        <button type="button" class="wire-chip-btn" data-color="#212529" title="흑색 (-/N상)">
+          <span class="wire-chip-dot" style="background:#212529; border:1px solid #71717a;"></span>
+          <span>흑색 (-)</span>
+        </button>
+        <button type="button" class="wire-chip-btn" data-color="#2a9d8f" title="녹색 (접지)">
+          <span class="wire-chip-dot" style="background:#2a9d8f;"></span>
+          <span>녹색 (G)</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="toolbar-group">
+      <button id="btn_record_data" class="btn btn-sm" style="background:#0284c7; border-color:#0284c7;" title="현재 계측값을 보고서용 데이터로 기록합니다">
+        📥 데이터 기록 <span id="record_count_badge" style="background:rgba(255,255,255,0.25); padding:1px 5px; border-radius:10px; font-size:10px; margin-left:2px;">0</span>
+      </button>
+      <button id="btn_export_csv" class="btn btn-sm btn-outline" style="border-color:#334155; color:#cbd5e1;" title="기록된 데이터를 CSV 파일로 다운로드합니다">
+        📊 CSV
+      </button>
+      <button id="btn_export_xlsx" class="btn btn-sm btn-outline" style="border-color:#334155; color:#cbd5e1;" title="기록된 데이터를 Excel (XLSX) 파일로 다운로드합니다">
+        📗 Excel
+      </button>
+      <button id="btn_export_pdf" class="btn btn-sm btn-outline" style="border-color:#334155; color:#cbd5e1;" title="실습 보고서를 PDF 파일로 인쇄/저장합니다">
+        📄 PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- 3. 메인 콘텐츠 영역 -->
+  <main class="main-content-area">
+
+    <!-- TAB 1: 실습 장비 워크벤치 (기본) -->
+    <section id="view_workbench" class="view-section active workbench-container">
+      
+      <!-- 좌측 실습 가이드 및 부품 조립 패널 -->
+      <aside class="sidebar-guide" id="sidebar_guide">
+        <div class="guide-panel-header">
+          <div class="guide-panel-title">
+            <span>📋</span> <span id="guide_exp_title">실습 가이드</span>
+          </div>
+        </div>
+
+        <div class="guide-content">
+          <div class="guide-card">
+            <h4>🎯 실습 목표</h4>
+            <p id="guide_exp_goal" style="color:#cbd5e1; font-size:12.5px;"></p>
+          </div>
+
+          <div class="guide-card">
+            <h4>🔧 기계 부품 조립</h4>
+            <div class="assembly-controls">
+              <div class="assembly-row">
+                <span class="assembly-label">회전자(Rotor):</span>
+                <select id="select_rotor_type" class="select-input" style="width:140px; font-size:12px;">
+                  <option value="DISK_A">디스크 슬롯 A형</option>
+                  <option value="DISK_B">디스크 슬롯 B형</option>
+                  <option value="SALIENT_POLE">돌극형 계자회전자</option>
+                  <option value="SQUIRREL_CAGE">농형 회전자</option>
+                  <option value="NONE">미장착 (탈착)</option>
+                </select>
+              </div>
+              <div class="assembly-row" style="margin-top:4px;">
+                <span class="assembly-label">구동 벨트 커플링:</span>
+                <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:12px; color:#38bdf8;">
+                  <input type="checkbox" id="check_belt_installed" checked> 벨트 연결됨
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="guide-card">
+            <h4>📝 실습 진행 순서</h4>
+            <ol class="guide-list" id="guide_exp_procedure"></ol>
+          </div>
+
+          <div class="guide-card">
+            <h4>🔍 계측 예상 기준</h4>
+            <p id="guide_exp_expected" style="color:#38bdf8; font-size:12px; font-weight:600;"></p>
+          </div>
+
+          <div class="guide-card" style="background:#0f172a; border-color:#0284c7; text-align:center;">
+            <button id="btn_goto_manual" class="btn btn-sm" style="width:100%; background:#0284c7; color:#fff; font-weight:700;" title="본 실습의 교재 매뉴얼 본문으로 이동합니다">
+              📖 본 실습 교재 매뉴얼 보기 ▶
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- 중앙 랙 작업대 영역 -->
+      <div class="rack-workspace-wrap" id="rack_workspace_wrap">
+        <div class="equipment-rack" id="equipment_rack">
+          <!-- 모듈들이 동적으로 렌더링됩니다 -->
+        </div>
+
+        <!-- 케이블 배선 SVG 오버레이 -->
+        <svg class="cable-svg-canvas" id="cable_svg_canvas">
+          <!-- 전선들이 여기에 SVG 경로로 렌더링됩니다 -->
+        </svg>
+
+        <!-- 하단 실시간 계측 데이터 기록 서랍 (Live Measurement Drawer) -->
+        <div class="live-measurement-drawer collapsed" id="live_measurement_drawer">
+          <div class="drawer-header" id="drawer_toggle_btn">
+            <div class="drawer-header-left">
+              <span class="drawer-icon">📊</span>
+              <span class="drawer-title">실시간 계측 데이터 기록표 (Live Measurement Table)</span>
+              <span class="drawer-badge" id="drawer_record_count_badge">0건 기록됨</span>
+            </div>
+            <div class="drawer-header-right">
+              <button id="btn_drawer_record" class="btn btn-sm btn-primary" style="font-weight:700; padding:3px 10px;" title="현재 상태를 1클릭 기록합니다 (단축키: Spacebar)">
+                📥 계측값 기록 (Space)
+              </button>
+              <button id="btn_drawer_clear" class="btn btn-sm btn-outline" style="border-color:#475569; color:#94a3b8; padding:3px 8px;" title="기록된 데이터를 모두 초기화합니다">
+                🗑️ 초기화
+              </button>
+              <span class="drawer-toggle-arrow" id="drawer_toggle_arrow">▲ 펼치기</span>
+            </div>
+          </div>
+          <div class="drawer-content">
+            <div class="drawer-table-wrap">
+              <table class="live-meas-table">
+                <thead>
+                  <tr>
+                    <th>No.</th>
+                    <th>시간</th>
+                    <th>실습 과제</th>
+                    <th>회전수 [rpm]</th>
+                    <th>발전 전압 [V]</th>
+                    <th>부하 전류 [A]</th>
+                    <th>계자 전류 [mA]</th>
+                    <th>검류계 [mA]</th>
+                    <th>주파수 [Hz]</th>
+                    <th>운전 상태 / 판정</th>
+                    <th>삭제</th>
+                  </tr>
+                </thead>
+                <tbody id="live_meas_tbody">
+                  <tr class="empty-meas-row">
+                    <td colspan="11">아직 기록된 데이터가 없습니다. 장비를 운전하고 [📥 계측값 기록] 버튼을 누르거나 스페이스바(Space)를 누르세요.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 우측 가상 오실로스코프 및 실시간 계측 모니터 도크 -->
+      <aside class="sidebar-dock" id="sidebar_dock">
+        <div class="dock-header">
+          <span>📈 가상 오실로스코프 (DSO)</span>
+        </div>
+
+        <div class="dock-body">
+          <div class="oscilloscope-box">
+            <canvas id="oscilloscope_canvas" class="oscilloscope-screen"></canvas>
+            <div class="oscilloscope-controls">
+              <span style="font-size:11px; color:#94a3b8;">TIME: 5ms/DIV</span>
+              <span style="font-size:11px; color:#94a3b8;">VOLT: 5V/DIV</span>
+              <button class="btn btn-sm" style="padding:2px 8px; font-size:11px;" onclick="window.app.scope.toggleRun()">Run/Stop</button>
+            </div>
+          </div>
+
+          <!-- 실시간 계측 모니터 카드 -->
+          <div class="guide-card">
+            <h4>📊 실시간 상태 계측값</h4>
+            <div style="display:flex; flex-direction:column; gap:8px; font-size:13px;">
+              <div style="display:flex; justify-content:space-between;">
+                <span style="color:#94a3b8;">발전 단자 전압:</span>
+                <strong id="dock_stat_volt" style="color:#38bdf8;">0.0 V</strong>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span style="color:#94a3b8;">부하 선간 전류:</span>
+                <strong id="dock_stat_curr" style="color:#38bdf8;">0.00 A</strong>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span style="color:#94a3b8;">모터 회전 속도:</span>
+                <strong id="dock_stat_rpm" style="color:#22c55e;">0 RPM</strong>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span style="color:#94a3b8;">계자 여자 전류:</span>
+                <strong id="dock_stat_ifield" style="color:#f59e0b;">0.0 mA</strong>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span style="color:#94a3b8;">검류계 지시치:</span>
+                <strong id="dock_stat_galv" style="color:#a78bfa;">0.00 mA</strong>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span style="color:#94a3b8;">발전 주파수:</span>
+                <strong id="dock_stat_freq" style="color:#38bdf8;">0.0 Hz</strong>
+              </div>
+            </div>
+            <button id="btn_dock_record" class="btn btn-sm btn-primary" style="width:100%; margin-top:12px; font-weight:700;">
+              📥 실시간 계측값 기록 (Space)
+            </button>
+          </div>
+
+          <!-- 인터랙션 팁 -->
+          <div class="guide-card" style="background:#1e293b; border-color:#334155;">
+            <h4>💡 마우스 조작 안내</h4>
+            <ul style="padding-left:16px; font-size:11.5px; color:#94a3b8; line-height:1.5;">
+              <li><strong>배선 연결:</strong> 단자를 마우스로 클릭 후 다른 단자를 클릭하면 자동 연결됩니다.</li>
+              <li><strong>배선 삭제:</strong> 연결된 전선을 클릭하면 제거됩니다.</li>
+              <li><strong>노브 조절:</strong> 노브 위에서 마우스 휠을 굴리거나 드래그하여 값을 미세 조절합니다.</li>
+              <li><strong>스위치 조작:</strong> 전원 스위치, 토글 스위치, 캠스위치를 클릭하여 상태를 전환합니다.</li>
+            </ul>
+          </div>
+
+          <!-- 우측 계측 도크 매뉴얼 바로가기 버튼 -->
+          <div class="guide-card" style="background:#0f172a; border-color:#0284c7; text-align:center;">
+            <button id="btn_dock_goto_manual" class="btn btn-sm" style="width:100%; background:#0284c7; color:#fff; font-weight:700;" title="본 실습의 교재 매뉴얼 본문으로 이동합니다">
+              📖 본 실습 교재 매뉴얼 보기 ▶
+            </button>
+          </div>
+        </div>
+      </aside>
+
+    </section>
+
+    <!-- TAB 2: 통합 디지털 교재 매뉴얼 (제1장 ~ 제6장 전권) -->
+    <section id="view_theory" class="view-section manual-book-container">
+      <div class="manual-topbar">
+        <div class="manual-topbar-left">
+          <span class="manual-book-badge">전권 수록</span>
+          <h2 class="manual-book-title">📖 IEG-6030 전기기계구조 실습장비 교재 매뉴얼</h2>
+        </div>
+        <div class="manual-search-box">
+          <span>🔍</span>
+          <input type="text" id="manual_search_input" placeholder="매뉴얼 검색 (예: 분권, 슬립, 기동저항, 실습 05)...">
+          <button id="btn_clear_search" class="btn btn-sm" style="display:none; padding:2px 8px;">✕</button>
+        </div>
+      </div>
+
+      <div class="manual-reader-body">
+        <!-- 좌측 목차 (TOC) 네비게이션 -->
+        <aside class="manual-toc-sidebar" id="manual_toc_sidebar">
+          <!-- 동적 목차 트리 렌더링 -->
+        </aside>
+
+        <!-- 우측 매뉴얼 본문 뷰어 -->
+        <main class="manual-content-viewer" id="manual_content_viewer">
+          <div id="theory_content_target" class="manual-article-content">
+            <!-- 선택된 섹션 본문 렌더링 -->
+          </div>
+        </main>
+      </div>
+    </section>
+
+    <!-- TAB 3: 실습 평가 화면 -->
+    <section id="view_evaluation" class="view-section curriculum-view-container">
+      <div id="eval_content_target" style="width:100%; display:flex; justify-content:center;"></div>
+    </section>
+
+    <!-- TAB 4: 결과 피드백 및 보고서 화면 -->
+    <section id="view_feedback" class="view-section curriculum-view-container">
+      <div class="curriculum-card" id="feedback_content_target"></div>
+    </section>
+
+  </main>
+
+  <!-- 애플리케이션 모듈 진입 스크립트 -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,984 @@
+:root {
+  --rack-height: 420px;
+}
+
+.workbench-container {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background: #111827;
+  overflow: hidden;
+}
+
+/* 좌측 실습 가이드 및 부품 조립 사이드 패널 */
+.sidebar-guide {
+  width: 280px;
+  background: #1e293b;
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  z-index: 10;
+  overflow-y: auto;
+}
+
+.guide-panel-header {
+  padding: 12px 14px;
+  background: #0f172a;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.guide-panel-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #38bdf8;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.guide-content {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.guide-card {
+  background: #334155;
+  border-radius: 8px;
+  padding: 12px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.guide-card h4 {
+  font-size: 13.5px;
+  color: #f1f5f9;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.guide-list {
+  padding-left: 18px;
+  color: #cbd5e1;
+}
+
+.guide-list li {
+  margin-bottom: 6px;
+}
+
+/* 기계 조립 제어 카드 */
+.assembly-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.assembly-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.assembly-label {
+  font-size: 12.5px;
+  color: #cbd5e1;
+}
+
+/* 중앙 메인 실습 랙 영역: 여백 없이 항상 정중앙 자동 정렬 */
+.rack-workspace-wrap {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px 20px;
+  background: radial-gradient(circle at 50% 30%, #1f293d 0%, #0b0f19 100%);
+  min-width: 0;
+  min-height: 0;
+}
+
+/* 랙 알루미늄 프레임 */
+.equipment-rack {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: linear-gradient(180deg, #334155 0%, #1e293b 100%);
+  padding: 20px 14px;
+  border-radius: 12px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 2px 4px rgba(255,255,255,0.15);
+  border: 4px solid #475569;
+  position: relative;
+  margin: auto;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* 상단/하단 케이블 덕트 트러프 시각화 */
+.rack-cable-duct {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  height: 18px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: #64748b;
+  letter-spacing: 2px;
+  z-index: 1;
+}
+.rack-cable-duct.top { top: 4px; }
+.rack-cable-duct.bottom { bottom: 4px; }
+
+/* 모듈 단위: 비율 왜곡을 방지하기 위해 정확한 aspect-ratio 유지 및 동일 높이 */
+.rack-module {
+  position: relative;
+  height: var(--rack-height, 420px); /* 동적 반응형 높이 */
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.65);
+  border: 2px solid #64748b;
+  background: #e2e8f0;
+  z-index: 2;
+  flex-shrink: 0;
+  transition: height 0.2s ease;
+}
+
+/* 싱글 모듈 원본 비율 유지 (폭 170mm, 396x725 기준) */
+.rack-module.module-single {
+  aspect-ratio: 396 / 725;
+  width: auto;
+}
+
+/* 더블 모듈 원본 비율 유지 (폭 340mm, 800x710 기준) */
+.rack-module.module-double {
+  aspect-ratio: 803 / 714;
+  width: auto;
+}
+
+/* 11번 구동 모터 모듈 원본 고유 비율 (532x478) */
+.rack-module[data-module-id="IEG-6030-11"] {
+  aspect-ratio: 532 / 478;
+  width: auto;
+}
+
+.module-panel-wrap {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.module-bg-img {
+  width: 100%;
+  height: 100%;
+  object-fit: fill; /* 각 모듈의 정확한 aspect-ratio에 맞춰 100% 꽉 채움 (여백/필러박싱 제거) */
+  display: block;
+}
+
+.module-overlay-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+}
+
+/* 4mm 바나나 단자 잭 (원본 소켓 중심에 딱 맞도록 크기 및 중심 정렬) */
+.terminal-jack {
+  position: absolute;
+  width: 15px;
+  height: 15px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  cursor: crosshair;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.6);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.terminal-jack:hover {
+  transform: translate(-50%, -50%) scale(1.35);
+  box-shadow: 0 0 10px #38bdf8;
+}
+
+.terminal-jack.terminal-active {
+  transform: translate(-50%, -50%) scale(1.5);
+  box-shadow: 0 0 14px #f59e0b;
+  animation: pulse-ring 1.2s infinite;
+}
+
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+  70% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+}
+
+.jack-core {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #000;
+  border: 1px solid #fbbf24; /* 금도금 바나나 핀 접점 */
+}
+
+.jack-label {
+  display: none;
+}
+
+/* 단자 외곽 링 스타일 (실제 단자 테두리와 조화) */
+.jack-red    { background: radial-gradient(circle, #dc2626 50%, #991b1b); border: 1.5px solid #ef4444; }
+.jack-black  { background: radial-gradient(circle, #374151 50%, #111827); border: 1.5px solid #4b5563; }
+.jack-blue   { background: radial-gradient(circle, #2563eb 50%, #1d4ed8); border: 1.5px solid #3b82f6; }
+.jack-green  { background: radial-gradient(circle, #059669 50%, #047857); border: 1.5px solid #10b981; }
+.jack-yellow { background: radial-gradient(circle, #d97706 50%, #b45309); border: 1.5px solid #f59e0b; }
+.jack-white  { background: radial-gradient(circle, #f1f5f9 50%, #cbd5e1); border: 1.5px solid #ffffff; }
+
+/* 조작 노브 (원본 사진의 검은 노브 위에 딱 맞게 얹어지는 정밀 노브) */
+.control-knob-wrapper {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.knob-body {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  /* 실제 산업용 플라스틱 널링 노브 룩 */
+  background: radial-gradient(circle at 35% 35%, #3f3f46, #18181b 75%, #09090b);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.8), inset 0 2px 3px rgba(255,255,255,0.25), inset 0 -3px 6px rgba(0,0,0,0.9);
+  border: 2px solid #27272a;
+  position: relative;
+  cursor: grab;
+  touch-action: none;
+}
+
+.knob-body:active {
+  cursor: grabbing;
+}
+
+/* 노브의 화이트 인디케이터 지시선 */
+.knob-indicator {
+  position: absolute;
+  top: 6%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 25%;
+  background: #ffffff;
+  border-radius: 2px;
+  box-shadow: 0 0 4px rgba(255,255,255,0.9), 0 1px 2px rgba(0,0,0,0.8);
+}
+
+.knob-val-bubble {
+  position: absolute;
+  top: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.95);
+  color: #38bdf8;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.control-knob-wrapper:hover .knob-val-bubble,
+.control-knob-wrapper:active .knob-val-bubble {
+  opacity: 1;
+}
+
+/* 락커 스위치 (전원) */
+.rocker-switch {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 34px;
+  height: 24px;
+  background: #111827;
+  border: 2px solid #374151;
+  border-radius: 4px;
+  cursor: pointer;
+  z-index: 6;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rocker-rock {
+  width: 26px;
+  height: 16px;
+  border-radius: 2px;
+  background: #7f1d1d;
+  transition: all 0.2s ease;
+}
+
+.rocker-switch.sw-on .rocker-rock {
+  background: #ef4444;
+  box-shadow: 0 0 12px #ef4444;
+}
+
+/* 토글 스위치 (05번) */
+.toggle-switch-wrapper {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 24px;
+  height: 36px;
+  cursor: pointer;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.toggle-lever {
+  width: 7px;
+  height: 22px;
+  background: linear-gradient(180deg, #f1f5f9, #64748b);
+  border-radius: 3px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.6);
+  transition: transform 0.15s ease;
+}
+
+.toggle-switch-wrapper.sw-up .toggle-lever {
+  transform: translateY(-5px) scaleY(1.1);
+  background: linear-gradient(180deg, #6ee7b7, #059669);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.7);
+}
+
+.toggle-switch-wrapper.sw-down .toggle-lever {
+  transform: translateY(5px) scaleY(0.9);
+  background: linear-gradient(180deg, #e2e8f0, #475569);
+}
+
+.toggle-label {
+  font-size: 9px;
+  font-weight: 800;
+  color: #1e293b;
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+/* 3단 캠 / 로터리 스위치 */
+.rotary-switch-wrapper {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rotary-handle {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(circle, #3f3f46, #18181b 80%, #09090b);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.8), inset 0 1px 2px rgba(255,255,255,0.3);
+  position: relative;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.rotary-indicator {
+  position: absolute;
+  top: 6%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 3px;
+  height: 35%;
+  background: #f59e0b;
+  border-radius: 1.5px;
+  box-shadow: 0 0 5px #f59e0b;
+}
+
+/* 디지털 패널 메타 (Digital Panel Meter) 전면 교체 스타일 */
+.digital-panel-meter {
+  position: absolute;
+  background: #090d16;
+  border: 1.5px solid #27272a;
+  border-radius: 5px;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.95), 0 2px 6px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 4px 7px;
+  box-sizing: border-box;
+  z-index: 5;
+  pointer-events: none;
+  user-select: none;
+  overflow: hidden;
+}
+
+.dpm-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 8.5px;
+  font-weight: 800;
+  color: #64748b;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  line-height: 1.1;
+}
+
+.dpm-range {
+  background: #1e293b;
+  color: #94a3b8;
+  padding: 0.5px 4px;
+  border-radius: 2px;
+  font-size: 7.5px;
+  font-weight: 700;
+  border: 1px solid #334155;
+  white-space: nowrap;
+}
+
+.dpm-body {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px;
+  margin: 1px 0;
+}
+
+.dpm-num {
+  font-family: 'Courier New', 'Consolas', monospace;
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  line-height: 1;
+}
+
+.theme-cyan .dpm-num {
+  color: #38bdf8;
+  text-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+}
+
+.theme-green .dpm-num {
+  color: #34d399;
+  text-shadow: 0 0 10px rgba(52, 211, 153, 0.6);
+}
+
+.theme-amber .dpm-num {
+  color: #fbbf24;
+  text-shadow: 0 0 10px rgba(251, 191, 36, 0.6);
+}
+
+.dpm-unit {
+  font-size: 10px;
+  font-weight: 800;
+  opacity: 0.9;
+}
+.theme-cyan .dpm-unit { color: #38bdf8; }
+.theme-green .dpm-unit { color: #34d399; }
+.theme-amber .dpm-unit { color: #fbbf24; }
+
+.dpm-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5px;
+}
+
+.dpm-bar-track {
+  width: 100%;
+  height: 4px;
+  background: #18181b;
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid #27272a;
+}
+
+.dpm-bar-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  transition: width 0.08s ease, left 0.08s ease;
+}
+.theme-cyan .dpm-bar-fill { background: linear-gradient(90deg, #0284c7, #38bdf8); }
+.theme-green .dpm-bar-fill { background: linear-gradient(90deg, #059669, #34d399); }
+.theme-amber .dpm-bar-fill { background: linear-gradient(90deg, #d97706, #fbbf24); }
+
+.dpm-ticks {
+  display: flex;
+  justify-content: space-between;
+  font-size: 7px;
+  color: #475569;
+  font-family: monospace;
+}
+
+/* 아날로그 미터 지침 오버레이 (하위 호환) */
+.meter-window-overlay {
+  position: absolute;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.meter-needle-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* 디지털 RPM 미터 */
+.digital-meter-display {
+  position: absolute;
+  background: #09090b;
+  border: 1.5px solid #27272a;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  z-index: 5;
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.9);
+}
+
+.digi-val {
+  font-family: "Courier New", monospace;
+  font-size: 15px;
+  font-weight: 900;
+  color: #22c55e;
+  text-shadow: 0 0 8px rgba(34, 197, 94, 0.7);
+  letter-spacing: 2px;
+  line-height: 1;
+}
+
+.digi-unit {
+  display: none;
+}
+
+/* 램프 소켓 및 글로우 */
+.lamp-socket {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 26px;
+  height: 26px;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.lamp-bulb {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lamp-filament {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #333;
+  transition: all 0.15s ease;
+}
+
+.lamp-glow {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(253, 224, 71, 0.95) 0%, rgba(245, 158, 11, 0.5) 45%, rgba(245, 158, 11, 0) 100%);
+  opacity: 0;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  pointer-events: none;
+}
+
+/* 계철 프레임 조립 SVG 레이어 */
+.field-frame-assembly-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+
+/* 케이블 SVG 오버레이 */
+.cable-svg-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 8;
+}
+
+.rendered-wire {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.rendered-wire:hover .wire-interactive-path {
+  stroke-width: 8;
+  filter: drop-shadow(0 0 8px rgba(255,255,255,0.8));
+}
+
+/* 우측 가상 오실로스코프 및 모니터 도크 */
+.sidebar-dock {
+  width: 290px;
+  background: #1e293b;
+  border-left: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.dock-header {
+  padding: 12px 14px;
+  background: #0f172a;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 14px;
+  font-weight: 700;
+  color: #38bdf8;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* 플로팅 사이드바 복원 탭 */
+.floating-sidebar-tab {
+  position: absolute;
+  top: 14px;
+  z-index: 15;
+  background: #1e293b;
+  color: #38bdf8;
+  border: 1px solid #475569;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+.floating-sidebar-tab:hover {
+  background: #334155;
+  color: #fff;
+  border-color: #38bdf8;
+}
+.floating-sidebar-tab.left {
+  left: 0;
+  border-radius: 0 6px 6px 0;
+  border-left: none;
+}
+.floating-sidebar-tab.right {
+  right: 0;
+  border-radius: 6px 0 0 6px;
+  border-right: none;
+}
+
+/* 사이드바 헤더 내 미니 접기/펼치기 토글 버튼 */
+.btn-sidebar-toggle {
+  background: #0f172a;
+  border: 1px solid #475569;
+  color: #94a3b8;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 11px;
+  transition: all 0.15s ease;
+}
+.btn-sidebar-toggle:hover {
+  background: #334155;
+  color: #fff;
+  border-color: #38bdf8;
+}
+
+/* 줌 배율 제어 박스 */
+.zoom-btn-group {
+  display: flex;
+  align-items: center;
+  background: #0f172a;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+}
+.zoom-btn-group .btn {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  padding: 4px 8px;
+  color: #cbd5e1;
+}
+.zoom-btn-group .btn:hover {
+  background: #334155;
+  color: #fff;
+}
+.zoom-label {
+  padding: 0 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #38bdf8;
+  min-width: 44px;
+  text-align: center;
+}
+
+.dock-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+}
+
+.oscilloscope-box {
+  background: #0a1118;
+  border-radius: 8px;
+  padding: 10px;
+  border: 1px solid #334155;
+}
+
+.oscilloscope-screen {
+  width: 100%;
+  height: 180px;
+  display: block;
+  border-radius: 4px;
+}
+
+.oscilloscope-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+/* 실시간 전류 흐름 파티클 애니메이션 */
+@keyframes wire-current-flow-anim {
+  from {
+    stroke-dashoffset: 52px;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.wire-current-flow {
+  animation: wire-current-flow-anim 0.7s linear infinite;
+  filter: drop-shadow(0 0 5px #fef08a);
+  pointer-events: none;
+}
+
+/* 구동 벨트 애니메이션 스타일 */
+.animated-drive-belt-group {
+  pointer-events: none;
+}
+
+/* === Live Measurement Drawer === */
+.live-measurement-drawer {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 0;
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-bottom: none;
+  border-radius: 12px 12px 0 0;
+  box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.7);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  transition: max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.live-measurement-drawer.collapsed {
+  max-height: 42px;
+}
+
+.live-measurement-drawer:not(.collapsed) {
+  max-height: 260px;
+}
+
+.drawer-header {
+  height: 42px;
+  min-height: 42px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #1e293b;
+  border-radius: 11px 11px 0 0;
+  cursor: pointer;
+  user-select: none;
+  border-bottom: 1px solid #334155;
+}
+
+.drawer-header:hover {
+  background: #273549;
+}
+
+.drawer-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.drawer-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #38bdf8;
+}
+
+.drawer-badge {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.drawer-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.drawer-toggle-arrow {
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.drawer-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 14px;
+  background: #0f172a;
+  max-height: 218px;
+}
+
+.drawer-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.live-meas-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  text-align: center;
+}
+
+.live-meas-table th {
+  background: #1e293b;
+  color: #94a3b8;
+  font-weight: 600;
+  padding: 6px 8px;
+  border: 1px solid #334155;
+  white-space: nowrap;
+}
+
+.live-meas-table td {
+  padding: 6px 8px;
+  border: 1px solid #1e293b;
+  color: #f1f5f9;
+  white-space: nowrap;
+}
+
+.live-meas-table tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.live-meas-table tbody tr:hover {
+  background: rgba(56, 189, 248, 0.08);
+}
+
+.live-meas-table .highlight-row {
+  animation: rowHighlight 1.5s ease-out;
+}
+
+@keyframes rowHighlight {
+  0% { background: rgba(56, 189, 248, 0.4); }
+  100% { background: transparent; }
+}
+
+.empty-meas-row td {
+  padding: 20px;
+  color: #64748b;
+  font-style: italic;
+}
+
+.meas-status-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+.meas-status-badge.normal { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+.meas-status-badge.warn { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+.meas-status-badge.danger { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+
+.btn-del-meas {
+  background: transparent;
+  border: none;
+  color: #f87171;
+  cursor: pointer;
+  padding: 2px 6px;
+  font-size: 13px;
+  border-radius: 4px;
+}
+.btn-del-meas:hover {
+  background: rgba(239, 68, 68, 0.15);
+}
+
+/* Toast notification */
+.meas-toast {
+  position: fixed;
+  top: 70px;
+  right: 24px;
+  background: #0284c7;
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  font-size: 13px;
+  font-weight: 600;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: toastSlide 0.3s ease-out;
+}
+@keyframes toastSlide {
+  from { transform: translateX(50px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}

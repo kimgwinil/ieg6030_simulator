@@ -1,0 +1,911 @@
+{
+  "[그림 3-1]": {
+    "figId": "3-1",
+    "safeId": "3_1",
+    "caption": "[그림 3-1] 자계 속에서 도선의 운동",
+    "page": 31,
+    "file": "assets/manual_figures/fig_3_1.png",
+    "width": 990,
+    "height": 468
+  },
+  "[그림 3-2]": {
+    "figId": "3-2",
+    "safeId": "3_2",
+    "caption": "[그림 3-2] 도선의 이동시 자력선의 변화",
+    "page": 32,
+    "file": "assets/manual_figures/fig_3_2.png",
+    "width": 990,
+    "height": 416
+  },
+  "[그림 3-3]": {
+    "figId": "3-3",
+    "safeId": "3_3",
+    "caption": "[그림 3-3] 도선에 유도 기전력(전류) 발생",
+    "page": 32,
+    "file": "assets/manual_figures/fig_3_3.png",
+    "width": 990,
+    "height": 538
+  },
+  "[그림 3-4]": {
+    "figId": "3-4",
+    "safeId": "3_4",
+    "caption": "[그림 3-4] 플레밍의 오른손 법칙",
+    "page": 33,
+    "file": "assets/manual_figures/fig_3_4.png",
+    "width": 990,
+    "height": 382
+  },
+  "[그림 3-5]": {
+    "figId": "3-5",
+    "safeId": "3_5",
+    "caption": "[그림 3-5] AC 발전기의 원리도",
+    "page": 33,
+    "file": "assets/manual_figures/fig_3_5.png",
+    "width": 990,
+    "height": 445
+  },
+  "[그림 3-6]": {
+    "figId": "3-6",
+    "safeId": "3_6",
+    "caption": "[그림 3-6] AC 발전기의 출력파형",
+    "page": 34,
+    "file": "assets/manual_figures/fig_3_6.png",
+    "width": 990,
+    "height": 479
+  },
+  "[그림 3-7]": {
+    "figId": "3-7",
+    "safeId": "3_7",
+    "caption": "[그림 3-7] DC 발전기의 원리도",
+    "page": 35,
+    "file": "assets/manual_figures/fig_3_7.png",
+    "width": 990,
+    "height": 358
+  },
+  "[그림 3-8]": {
+    "figId": "3-8",
+    "safeId": "3_8",
+    "caption": "[그림 3-8] DC 발전기의 출력파형",
+    "page": 35,
+    "file": "assets/manual_figures/fig_3_8.png",
+    "width": 990,
+    "height": 521
+  },
+  "[그림 3-9]": {
+    "figId": "3-9",
+    "safeId": "3_9",
+    "caption": "[그림 3-9] 의 (b)와 같이 정류자는 전기자와 회전자에 일체되어 있으며 발전기에서의 유",
+    "page": 37,
+    "file": "assets/manual_figures/fig_3_9.png",
+    "width": 990,
+    "height": 94
+  },
+  "[그림 3-10]": {
+    "figId": "3-10",
+    "safeId": "3_10",
+    "caption": "[그림 3-10] 정류자의 구조",
+    "page": 37,
+    "file": "assets/manual_figures/fig_3_10.png",
+    "width": 990,
+    "height": 307
+  },
+  "[그림 3-11]": {
+    "figId": "3-11",
+    "safeId": "3_11",
+    "caption": "[그림 3-11] 도체의 유도 기전력",
+    "page": 38,
+    "file": "assets/manual_figures/fig_3_11.png",
+    "width": 990,
+    "height": 540
+  },
+  "[그림 3-12]": {
+    "figId": "3-12",
+    "safeId": "3_12",
+    "caption": "[그림 3-12] 자석식 발전기",
+    "page": 40,
+    "file": "assets/manual_figures/fig_3_12.png",
+    "width": 490,
+    "height": 329
+  },
+  "[그림 3-13]": {
+    "figId": "3-13",
+    "safeId": "3_13",
+    "caption": "[그림 3-13] 처럼 계자에 필요한 전원을 발전기 자체에서 발생한 전원이 아닌 외부의 축",
+    "page": 40,
+    "file": "assets/manual_figures/fig_3_13.png",
+    "width": 990,
+    "height": 103
+  },
+  "[그림 3-14]": {
+    "figId": "3-14",
+    "safeId": "3_14",
+    "caption": "[그림 3-14] 와 같이 전기자, 계자권선, 단자에 연결된 부하 모두가 직렬로 접속되어 있",
+    "page": 40,
+    "file": "assets/manual_figures/fig_3_14.png",
+    "width": 990,
+    "height": 329
+  },
+  "[그림 3-15]": {
+    "figId": "3-15",
+    "safeId": "3_15",
+    "caption": "[그림 3-15] 자여자 분권 발전기",
+    "page": 41,
+    "file": "assets/manual_figures/fig_3_15.png",
+    "width": 990,
+    "height": 356
+  },
+  "[그림 3-17]": {
+    "figId": "3-17",
+    "safeId": "3_17",
+    "caption": "[그림 3-17] 보극이 달린 복권 발전기와 2극 발전기일 때",
+    "page": 42,
+    "file": "assets/manual_figures/fig_3_17.png",
+    "width": 990,
+    "height": 404
+  },
+  "[그림 3-18]": {
+    "figId": "3-18",
+    "safeId": "3_18",
+    "caption": "[그림 3-18] ",
+    "page": 43,
+    "file": "assets/manual_figures/fig_3_18.png",
+    "width": 490,
+    "height": 448
+  },
+  "[그림 3-19]": {
+    "figId": "3-19",
+    "safeId": "3_19",
+    "caption": "[그림 3-19] 외부 특성 곡선",
+    "page": 44,
+    "file": "assets/manual_figures/fig_3_19.png",
+    "width": 990,
+    "height": 370
+  },
+  "[그림 3-20]": {
+    "figId": "3-20",
+    "safeId": "3_20",
+    "caption": "[그림 3-20] 발전기의 전압 확립 과정",
+    "page": 44,
+    "file": "assets/manual_figures/fig_3_20.png",
+    "width": 990,
+    "height": 390
+  },
+  "[그림 3-21]": {
+    "figId": "3-21",
+    "safeId": "3_21",
+    "caption": "[그림 3-21] 동기 발전기의 구조",
+    "page": 45,
+    "file": "assets/manual_figures/fig_3_21.png",
+    "width": 990,
+    "height": 341
+  },
+  "[그림 3-22]": {
+    "figId": "3-22",
+    "safeId": "3_22",
+    "caption": "[그림 3-22] 동기 발전기의 원리",
+    "page": 46,
+    "file": "assets/manual_figures/fig_3_22.png",
+    "width": 990,
+    "height": 568
+  },
+  "[그림 3-23]": {
+    "figId": "3-23",
+    "safeId": "3_23",
+    "caption": "[그림 3-23] 극수에 따른 유도 기전력의 주파수 변화",
+    "page": 46,
+    "file": "assets/manual_figures/fig_3_23.png",
+    "width": 990,
+    "height": 545
+  },
+  "[그림 3-24]": {
+    "figId": "3-24",
+    "safeId": "3_24",
+    "caption": "[그림 3-24] 3상 동기기의 4극과 2극의 이해도",
+    "page": 48,
+    "file": "assets/manual_figures/fig_3_24.png",
+    "width": 990,
+    "height": 579
+  },
+  "[그림 4-1]": {
+    "figId": "4-1",
+    "safeId": "4_1",
+    "caption": "[그림 4-1] 장비 결선도",
+    "page": 53,
+    "file": "assets/manual_figures/fig_4_1.png",
+    "width": 990,
+    "height": 579
+  },
+  "[그림 4-2]": {
+    "figId": "4-2",
+    "safeId": "4_2",
+    "caption": "[그림 4-2] 의 (a)와 같이 자극의 연장선과 연동선(Coil)의 감긴 방향이 일치되도록 한",
+    "page": 55,
+    "file": "assets/manual_figures/fig_4_2.png",
+    "width": 990,
+    "height": 329
+  },
+  "[그림 4-3]": {
+    "figId": "4-3",
+    "safeId": "4_3",
+    "caption": "[그림 4-3] 유도 기전력의 세기 차이",
+    "page": 56,
+    "file": "assets/manual_figures/fig_4_3.png",
+    "width": 990,
+    "height": 329
+  },
+  "[그림 4-4]": {
+    "figId": "4-4",
+    "safeId": "4_4",
+    "caption": "[그림 4-4] 장비 결선도",
+    "page": 61,
+    "file": "assets/manual_figures/fig_4_4.png",
+    "width": 990,
+    "height": 579
+  },
+  "[그림 4-5]": {
+    "figId": "4-5",
+    "safeId": "4_5",
+    "caption": "[그림 4-5] 장비 결선도",
+    "page": 69,
+    "file": "assets/manual_figures/fig_4_5.png",
+    "width": 490,
+    "height": 579
+  },
+  "[그림 4-6]": {
+    "figId": "4-6",
+    "safeId": "4_6",
+    "caption": "[그림 4-6] ",
+    "page": 70,
+    "file": "assets/manual_figures/fig_4_6.png",
+    "width": 990,
+    "height": 562
+  },
+  "[그림 4-8]": {
+    "figId": "4-8",
+    "safeId": "4_8",
+    "caption": "[그림 4-8] 장비 결선도",
+    "page": 78,
+    "file": "assets/manual_figures/fig_4_8.png",
+    "width": 990,
+    "height": 548
+  },
+  "[그림 4-9]": {
+    "figId": "4-9",
+    "safeId": "4_9",
+    "caption": "[그림 4-9] 직류 타여자 분권 발진기 회로",
+    "page": 78,
+    "file": "assets/manual_figures/fig_4_9.png",
+    "width": 990,
+    "height": 555
+  },
+  "[그림 4-10]": {
+    "figId": "4-10",
+    "safeId": "4_10",
+    "caption": "[그림 4-10] 계자권선에 의한 직류 타려 분권 발진기의 조립도",
+    "page": 79,
+    "file": "assets/manual_figures/fig_4_10.png",
+    "width": 990,
+    "height": 579
+  },
+  "[그림 4-11]": {
+    "figId": "4-11",
+    "safeId": "4_11",
+    "caption": "[그림 4-11] 장비 결선도",
+    "page": 86,
+    "file": "assets/manual_figures/fig_4_11.png",
+    "width": 990,
+    "height": 548
+  },
+  "[그림 4-12]": {
+    "figId": "4-12",
+    "safeId": "4_12",
+    "caption": "[그림 4-12] 자려 분권 발전기 실습 회로",
+    "page": 86,
+    "file": "assets/manual_figures/fig_4_12.png",
+    "width": 990,
+    "height": 579
+  },
+  "[그림 4-13]": {
+    "figId": "4-13",
+    "safeId": "4_13",
+    "caption": "[그림 4-13] 장비 결선도",
+    "page": 93,
+    "file": "assets/manual_figures/fig_4_13.png",
+    "width": 990,
+    "height": 579
+  },
+  "[그림 4-14]": {
+    "figId": "4-14",
+    "safeId": "4_14",
+    "caption": "[그림 4-14] 타려 분권 발전기의 무부하 특성 회로",
+    "page": 94,
+    "file": "assets/manual_figures/fig_4_14.png",
+    "width": 990,
+    "height": 523
+  },
+  "[그림 4-15]": {
+    "figId": "4-15",
+    "safeId": "4_15",
+    "caption": "[그림 4-15] 장비 결선도",
+    "page": 100,
+    "file": "assets/manual_figures/fig_4_15.png",
+    "width": 990,
+    "height": 543
+  },
+  "[그림 4-16]": {
+    "figId": "4-16",
+    "safeId": "4_16",
+    "caption": "[그림 4-16] 타려 분권 발전기의 부하특성 실험 회로",
+    "page": 100,
+    "file": "assets/manual_figures/fig_4_16.png",
+    "width": 990,
+    "height": 487
+  },
+  "[그림 4-17]": {
+    "figId": "4-17",
+    "safeId": "4_17",
+    "caption": "[그림 4-17] 장비 결선도",
+    "page": 108,
+    "file": "assets/manual_figures/fig_4_17.png",
+    "width": 990,
+    "height": 545
+  },
+  "[그림 4-18]": {
+    "figId": "4-18",
+    "safeId": "4_18",
+    "caption": "[그림 4-18] 과 같이 각 모듈간 회로를 구성한다. 이때 연결 코드가 회전자에 끼지 않",
+    "page": 109,
+    "file": "assets/manual_figures/fig_4_18.png",
+    "width": 990,
+    "height": 329
+  },
+  "[그림 4-19]": {
+    "figId": "4-19",
+    "safeId": "4_19",
+    "caption": "[그림 4-19] 와 [그림 4-20]을 참조하여 회로를 결선한다.",
+    "page": 116,
+    "file": "assets/manual_figures/fig_4_19.png",
+    "width": 990,
+    "height": 329
+  },
+  "[그림 4-20]": {
+    "figId": "4-20",
+    "safeId": "4_20",
+    "caption": "[그림 4-20] 교류 발전기의 부하특성 실습 회로도",
+    "page": 115,
+    "file": "assets/manual_figures/fig_4_20.png",
+    "width": 990,
+    "height": 579
+  },
+  "[그림 4-21]": {
+    "figId": "4-21",
+    "safeId": "4_21",
+    "caption": "[그림 4-21] 과 [그림 4-22]를 참조하여 2극 회전자의 회전 계자에 AC 18[V]가 공급되",
+    "page": 123,
+    "file": "assets/manual_figures/fig_4_21.png",
+    "width": 990,
+    "height": 329
+  },
+  "[그림 4-22]": {
+    "figId": "4-22",
+    "safeId": "4_22",
+    "caption": "[그림 4-22] 3상 발전기의 원리 실험 회로도",
+    "page": 122,
+    "file": "assets/manual_figures/fig_4_22.png",
+    "width": 990,
+    "height": 579
+  },
+  "[그림 4-24]": {
+    "figId": "4-24",
+    "safeId": "4_24",
+    "caption": "[그림 4-24] 3상 발전기의 조립도",
+    "page": 128,
+    "file": "assets/manual_figures/fig_4_24.png",
+    "width": 990,
+    "height": 579
+  },
+  "[그림 4-25]": {
+    "figId": "4-25",
+    "safeId": "4_25",
+    "caption": "[그림 4-25] 3상 발전기와 부하의 △ 결선",
+    "page": 129,
+    "file": "assets/manual_figures/fig_4_25.png",
+    "width": 990,
+    "height": 302
+  },
+  "[그림 4-26]": {
+    "figId": "4-26",
+    "safeId": "4_26",
+    "caption": "[그림 4-26] 3상 발전기 Y 결선 / 부하 △ 결선",
+    "page": 130,
+    "file": "assets/manual_figures/fig_4_26.png",
+    "width": 990,
+    "height": 320
+  },
+  "[그림 4-27]": {
+    "figId": "4-27",
+    "safeId": "4_27",
+    "caption": "[그림 4-27] 처럼 Y 결선 때의 백열전구의 밝기는 차이가 있는지 확인한다.",
+    "page": 131,
+    "file": "assets/manual_figures/fig_4_27.png",
+    "width": 990,
+    "height": 297
+  },
+  "[그림 4-28]": {
+    "figId": "4-28",
+    "safeId": "4_28",
+    "caption": "[그림 4-28] 장비 결선도",
+    "page": 136,
+    "file": "assets/manual_figures/fig_4_28.png",
+    "width": 990,
+    "height": 545
+  },
+  "[그림 4-29]": {
+    "figId": "4-29",
+    "safeId": "4_29",
+    "caption": "[그림 4-29] 와 같이 회로를 결선한다. 이때 3상 부하로 사용될 백열전구는 6[V]용으",
+    "page": 137,
+    "file": "assets/manual_figures/fig_4_29.png",
+    "width": 990,
+    "height": 329
+  },
+  "[그림 4-30]": {
+    "figId": "4-30",
+    "safeId": "4_30",
+    "caption": "[그림 4-30] 회전 전기자형 발전기 조립도",
+    "page": 137,
+    "file": "assets/manual_figures/fig_4_30.png",
+    "width": 990,
+    "height": 509
+  },
+  "[그림 4-31]": {
+    "figId": "4-31",
+    "safeId": "4_31",
+    "caption": "[그림 4-31] 과 [그림 4-32]를 참조하여 슬립링과 접속된 3개의 브러시는 안쪽부터 회",
+    "page": 144,
+    "file": "assets/manual_figures/fig_4_31.png",
+    "width": 990,
+    "height": 84
+  },
+  "[그림 4-32]": {
+    "figId": "4-32",
+    "safeId": "4_32",
+    "caption": "[그림 4-32] 회전 변류기의 회로도",
+    "page": 143,
+    "file": "assets/manual_figures/fig_4_32.png",
+    "width": 990,
+    "height": 565
+  },
+  "[그림 5-1]": {
+    "figId": "5-1",
+    "safeId": "5_1",
+    "caption": "[그림 5-1] 전동기 전자력의 발생원리",
+    "page": 147,
+    "file": "assets/manual_figures/fig_5_1.png",
+    "width": 990,
+    "height": 432
+  },
+  "[그림 5-2]": {
+    "figId": "5-2",
+    "safeId": "5_2",
+    "caption": "[그림 5-2] 전동기의 원리",
+    "page": 148,
+    "file": "assets/manual_figures/fig_5_2.png",
+    "width": 990,
+    "height": 393
+  },
+  "[그림 5-3]": {
+    "figId": "5-3",
+    "safeId": "5_3",
+    "caption": "[그림 5-3] 직류 전동기의 원리",
+    "page": 149,
+    "file": "assets/manual_figures/fig_5_3.png",
+    "width": 990,
+    "height": 563
+  },
+  "[그림 5-4]": {
+    "figId": "5-4",
+    "safeId": "5_4",
+    "caption": "[그림 5-4] 타려 전동기의 회로와 속도•토크 특성곡선",
+    "page": 153,
+    "file": "assets/manual_figures/fig_5_4.png",
+    "width": 990,
+    "height": 485
+  },
+  "[그림 5-5]": {
+    "figId": "5-5",
+    "safeId": "5_5",
+    "caption": "[그림 5-5] 분권전동기의 회로와 속도•토크 특성 곡선",
+    "page": 154,
+    "file": "assets/manual_figures/fig_5_5.png",
+    "width": 990,
+    "height": 474
+  },
+  "[그림 5-6]": {
+    "figId": "5-6",
+    "safeId": "5_6",
+    "caption": "[그림 5-6] 직권 전동기의 회로와 속도•토크 특성 곡선",
+    "page": 155,
+    "file": "assets/manual_figures/fig_5_6.png",
+    "width": 990,
+    "height": 505
+  },
+  "[그림 5-7]": {
+    "figId": "5-7",
+    "safeId": "5_7",
+    "caption": "[그림 5-7] 복권전동기의 회로와 속도•토크 특성 곡선",
+    "page": 156,
+    "file": "assets/manual_figures/fig_5_7.png",
+    "width": 990,
+    "height": 439
+  },
+  "[그림 5-8]": {
+    "figId": "5-8",
+    "safeId": "5_8",
+    "caption": "[그림 5-8] 기동 저항기의 연결회로",
+    "page": 157,
+    "file": "assets/manual_figures/fig_5_8.png",
+    "width": 990,
+    "height": 377
+  },
+  "[그림 5-9]": {
+    "figId": "5-9",
+    "safeId": "5_9",
+    "caption": "[그림 5-9] 는 전동기에서의 에너지 변환의 모양을 나타낸 것이다. 변환 과정에서 손실이",
+    "page": 159,
+    "file": "assets/manual_figures/fig_5_9.png",
+    "width": 990,
+    "height": 329
+  },
+  "[그림 5-10]": {
+    "figId": "5-10",
+    "safeId": "5_10",
+    "caption": "[그림 5-10] 전자 유도 작용",
+    "page": 162,
+    "file": "assets/manual_figures/fig_5_10.png",
+    "width": 990,
+    "height": 406
+  },
+  "[그림 5-11]": {
+    "figId": "5-11",
+    "safeId": "5_11",
+    "caption": "[그림 5-11] 농형 회전자의 구조도",
+    "page": 163,
+    "file": "assets/manual_figures/fig_5_11.png",
+    "width": 990,
+    "height": 284
+  },
+  "[그림 5-12]": {
+    "figId": "5-12",
+    "safeId": "5_12",
+    "caption": "[그림 5-12] 유도 전동시의 부하특성과 속도 특성곡선",
+    "page": 166,
+    "file": "assets/manual_figures/fig_5_12.png",
+    "width": 990,
+    "height": 313
+  },
+  "[그림 5-13]": {
+    "figId": "5-13",
+    "safeId": "5_13",
+    "caption": "[그림 5-13] 단상 유도 전동기의 기동",
+    "page": 167,
+    "file": "assets/manual_figures/fig_5_13.png",
+    "width": 990,
+    "height": 427
+  },
+  "[그림 5-14]": {
+    "figId": "5-14",
+    "safeId": "5_14",
+    "caption": "[그림 5-14] 분상 기동형 단상 유도전동기",
+    "page": 168,
+    "file": "assets/manual_figures/fig_5_14.png",
+    "width": 990,
+    "height": 427
+  },
+  "[그림 5-15]": {
+    "figId": "5-15",
+    "safeId": "5_15",
+    "caption": "[그림 5-15] 콘덴서 기동형 단상 유도 전동기",
+    "page": 169,
+    "file": "assets/manual_figures/fig_5_15.png",
+    "width": 990,
+    "height": 374
+  },
+  "[그림 5-16]": {
+    "figId": "5-16",
+    "safeId": "5_16",
+    "caption": "[그림 5-16] 영구 콘덴서 전동기",
+    "page": 170,
+    "file": "assets/manual_figures/fig_5_16.png",
+    "width": 990,
+    "height": 422
+  },
+  "[그림 5-17]": {
+    "figId": "5-17",
+    "safeId": "5_17",
+    "caption": "[그림 5-17] 2-콘덴서 유동 전동기",
+    "page": 171,
+    "file": "assets/manual_figures/fig_5_17.png",
+    "width": 990,
+    "height": 493
+  },
+  "[그림 5-18]": {
+    "figId": "5-18",
+    "safeId": "5_18",
+    "caption": "[그림 5-18] 계자극과 세이딩 코일을 나타내고 있는 4극 세이딩 코일 전동기",
+    "page": 171,
+    "file": "assets/manual_figures/fig_5_18.png",
+    "width": 990,
+    "height": 250
+  },
+  "[그림 5-19]": {
+    "figId": "5-19",
+    "safeId": "5_19",
+    "caption": "[그림 5-19] 세이딩 코일 전동기의 회전 방향",
+    "page": 172,
+    "file": "assets/manual_figures/fig_5_19.png",
+    "width": 990,
+    "height": 577
+  },
+  "[그림 6-1]": {
+    "figId": "6-1",
+    "safeId": "6_1",
+    "caption": "[그림 6-1] 장비 결선도",
+    "page": 177,
+    "file": "assets/manual_figures/fig_6_1.png",
+    "width": 990,
+    "height": 579
+  },
+  "[그림 6-2]": {
+    "figId": "6-2",
+    "safeId": "6_2",
+    "caption": "[그림 6-2] 의 회로처럼 전원 공급기로부터 출력된 DC 전원을 회전자의 코일에 연결",
+    "page": 179,
+    "file": "assets/manual_figures/fig_6_2.png",
+    "width": 990,
+    "height": 329
+  },
+  "[그림 6-3]": {
+    "figId": "6-3",
+    "safeId": "6_3",
+    "caption": "[그림 6-3] 결선도",
+    "page": 183,
+    "file": "assets/manual_figures/fig_6_3.png",
+    "width": 990,
+    "height": 579
+  },
+  "[그림 6-4]": {
+    "figId": "6-4",
+    "safeId": "6_4",
+    "caption": "[그림 6-4] 영구자석을 이용한 직류 전동기",
+    "page": 184,
+    "file": "assets/manual_figures/fig_6_4.png",
+    "width": 990,
+    "height": 579
+  },
+  "[그림 6-5]": {
+    "figId": "6-5",
+    "safeId": "6_5",
+    "caption": "[그림 6-5] 와 [그림 6-6]를 참조하여 직권 전동기의 회로를 결선한다.",
+    "page": 191,
+    "file": "assets/manual_figures/fig_6_5.png",
+    "width": 990,
+    "height": 329
+  },
+  "[그림 6-6]": {
+    "figId": "6-6",
+    "safeId": "6_6",
+    "caption": "[그림 6-6] 계자권선을 이용한 직권 전동기",
+    "page": 190,
+    "file": "assets/manual_figures/fig_6_6.png",
+    "width": 990,
+    "height": 546
+  },
+  "[그림 6-7]": {
+    "figId": "6-7",
+    "safeId": "6_7",
+    "caption": "[그림 6-7] 과 [그림 6-8]을 참조하여 분권전동기의 회로를 결선한다.",
+    "page": 196,
+    "file": "assets/manual_figures/fig_6_7.png",
+    "width": 990,
+    "height": 329
+  },
+  "[그림 6-8]": {
+    "figId": "6-8",
+    "safeId": "6_8",
+    "caption": "[그림 6-8] 분권전동기 실습회로",
+    "page": 196,
+    "file": "assets/manual_figures/fig_6_8.png",
+    "width": 990,
+    "height": 579
+  },
+  "[그림 6-9]": {
+    "figId": "6-9",
+    "safeId": "6_9",
+    "caption": "[그림 6-9] 와 [그림 6-10]을 참조하여 복권전동기의 회로를 결선한다.",
+    "page": 203,
+    "file": "assets/manual_figures/fig_6_9.png",
+    "width": 990,
+    "height": 329
+  },
+  "[그림 6-10]": {
+    "figId": "6-10",
+    "safeId": "6_10",
+    "caption": "[그림 6-10] 복권전동기 실습 회로",
+    "page": 202,
+    "file": "assets/manual_figures/fig_6_10.png",
+    "width": 990,
+    "height": 579
+  },
+  "[그림 6-11]": {
+    "figId": "6-11",
+    "safeId": "6_11",
+    "caption": "[그림 6-11] 과 [그림 6-12]를 참조하여 교류 정류자 전동기의 실습 회로를 결선한다.",
+    "page": 211,
+    "file": "assets/manual_figures/fig_6_11.png",
+    "width": 990,
+    "height": 329
+  },
+  "[그림 6-12]": {
+    "figId": "6-12",
+    "safeId": "6_12",
+    "caption": "[그림 6-12] ",
+    "page": 210,
+    "file": "assets/manual_figures/fig_6_12.png",
+    "width": 990,
+    "height": 542
+  },
+  "[그림 6-13]": {
+    "figId": "6-13",
+    "safeId": "6_13",
+    "caption": "[그림 6-13] 장비 결선도",
+    "page": 216,
+    "file": "assets/manual_figures/fig_6_13.png",
+    "width": 990,
+    "height": 546
+  },
+  "[그림 6-14]": {
+    "figId": "6-14",
+    "safeId": "6_14",
+    "caption": "[그림 6-14] 회전 변류기와 회전자계 실험 회로",
+    "page": 217,
+    "file": "assets/manual_figures/fig_6_14.png",
+    "width": 990,
+    "height": 543
+  },
+  "[그림 6-15]": {
+    "figId": "6-15",
+    "safeId": "6_15",
+    "caption": "[그림 6-15] 와 [그림 6-16]을 참조하여 회전 변류기와 유도 전동기를 결선한다.",
+    "page": 225,
+    "file": "assets/manual_figures/fig_6_15.png",
+    "width": 990,
+    "height": 329
+  },
+  "[그림 6-16]": {
+    "figId": "6-16",
+    "safeId": "6_16",
+    "caption": "[그림 6-16] 유도 전동기의 원리 실험 회로",
+    "page": 224,
+    "file": "assets/manual_figures/fig_6_16.png",
+    "width": 990,
+    "height": 435
+  },
+  "[그림 6-17]": {
+    "figId": "6-17",
+    "safeId": "6_17",
+    "caption": "[그림 6-17] 유도 전동기 원리를 위한 조립도",
+    "page": 225,
+    "file": "assets/manual_figures/fig_6_17.png",
+    "width": 990,
+    "height": 579
+  },
+  "[그림 6-18]": {
+    "figId": "6-18",
+    "safeId": "6_18",
+    "caption": "[그림 6-18] 과 [그림 6-19]를 참조하여 각 모듈 및 보드를 결선한다.",
+    "page": 233,
+    "file": "assets/manual_figures/fig_6_18.png",
+    "width": 990,
+    "height": 329
+  },
+  "[그림 6-19]": {
+    "figId": "6-19",
+    "safeId": "6_19",
+    "caption": "[그림 6-19] 3상 유도 전동기의 2단 속도 제어 회로",
+    "page": 232,
+    "file": "assets/manual_figures/fig_6_19.png",
+    "width": 990,
+    "height": 579
+  },
+  "[그림 6-20]": {
+    "figId": "6-20",
+    "safeId": "6_20",
+    "caption": "[그림 6-20] 유도 전동기의 고정자(Stator) 권선 조립도",
+    "page": 233,
+    "file": "assets/manual_figures/fig_6_20.png",
+    "width": 990,
+    "height": 579
+  },
+  "[그림 6-21]": {
+    "figId": "6-21",
+    "safeId": "6_21",
+    "caption": "[그림 6-21] 과 [그림 6-22]를 참조하여 회로를 결선한다.",
+    "page": 241,
+    "file": "assets/manual_figures/fig_6_21.png",
+    "width": 990,
+    "height": 329
+  },
+  "[그림 6-22]": {
+    "figId": "6-22",
+    "safeId": "6_22",
+    "caption": "[그림 6-22] 반발 전동기의 실습 회로",
+    "page": 240,
+    "file": "assets/manual_figures/fig_6_22.png",
+    "width": 990,
+    "height": 319
+  },
+  "[그림 6-23]": {
+    "figId": "6-23",
+    "safeId": "6_23",
+    "caption": "[그림 6-23] 반발 전동기의 조립도",
+    "page": 241,
+    "file": "assets/manual_figures/fig_6_23.png",
+    "width": 990,
+    "height": 579
+  },
+  "[그림 6-24]": {
+    "figId": "6-24",
+    "safeId": "6_24",
+    "caption": "[그림 6-24] 장비 결선도",
+    "page": 247,
+    "file": "assets/manual_figures/fig_6_24.png",
+    "width": 990,
+    "height": 579
+  },
+  "[그림 6-25]": {
+    "figId": "6-25",
+    "safeId": "6_25",
+    "caption": "[그림 6-25] 분상 전동기 실습 회로",
+    "page": 247,
+    "file": "assets/manual_figures/fig_6_25.png",
+    "width": 990,
+    "height": 390
+  },
+  "[그림 6-26]": {
+    "figId": "6-26",
+    "safeId": "6_26",
+    "caption": "[그림 6-26] 분상 전동기 조립도",
+    "page": 248,
+    "file": "assets/manual_figures/fig_6_26.png",
+    "width": 990,
+    "height": 579
+  },
+  "[그림 6-28]": {
+    "figId": "6-28",
+    "safeId": "6_28",
+    "caption": "[그림 6-28] 장비 결선도",
+    "page": 253,
+    "file": "assets/manual_figures/fig_6_28.png",
+    "width": 990,
+    "height": 579
+  },
+  "[그림 6-29]": {
+    "figId": "6-29",
+    "safeId": "6_29",
+    "caption": "[그림 6-29] 세이딩 코일형 유도 전동기 회로",
+    "page": 254,
+    "file": "assets/manual_figures/fig_6_29.png",
+    "width": 990,
+    "height": 478
+  },
+  "[그림 6-30]": {
+    "figId": "6-30",
+    "safeId": "6_30",
+    "caption": "[그림 6-30] 계자권선의 극성 전환 실험 회로",
+    "page": 255,
+    "file": "assets/manual_figures/fig_6_30.png",
+    "width": 990,
+    "height": 419
+  }
+}
