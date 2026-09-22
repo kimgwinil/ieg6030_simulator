@@ -74,11 +74,11 @@
   "[그림 3-9]": {
     "figId": "3-9",
     "safeId": "3_9",
-    "caption": "[그림 3-9] 의 (b)와 같이 정류자는 전기자와 회전자에 일체되어 있으며 발전기에서의 유",
+    "caption": "[그림 3-9] 직류기의 구성요소",
     "page": 37,
     "file": "assets/manual_figures/fig_3_9.png",
-    "width": 990,
-    "height": 94
+    "width": 1390,
+    "height": 784
   },
   "[그림 3-10]": {
     "figId": "3-10",
@@ -110,17 +110,17 @@
   "[그림 3-13]": {
     "figId": "3-13",
     "safeId": "3_13",
-    "caption": "[그림 3-13] 처럼 계자에 필요한 전원을 발전기 자체에서 발생한 전원이 아닌 외부의 축",
+    "caption": "[그림 3-13] 타여자식 분권발전기",
     "page": 40,
     "file": "assets/manual_figures/fig_3_13.png",
-    "width": 990,
-    "height": 103
+    "width": 1390,
+    "height": 784
   },
   "[그림 3-14]": {
     "figId": "3-14",
     "safeId": "3_14",
-    "caption": "[그림 3-14] 와 같이 전기자, 계자권선, 단자에 연결된 부하 모두가 직렬로 접속되어 있",
-    "page": 40,
+    "caption": "[그림 3-14] 직권 발전기 회로도",
+    "page": 41,
     "file": "assets/manual_figures/fig_3_14.png",
     "width": 990,
     "height": 329
@@ -146,7 +146,7 @@
   "[그림 3-18]": {
     "figId": "3-18",
     "safeId": "3_18",
-    "caption": "[그림 3-18] ",
+    "caption": "[그림 3-18] 무부하 포화곡선",
     "page": 43,
     "file": "assets/manual_figures/fig_3_18.png",
     "width": 490,
@@ -218,7 +218,7 @@
   "[그림 4-2]": {
     "figId": "4-2",
     "safeId": "4_2",
-    "caption": "[그림 4-2] 의 (a)와 같이 자극의 연장선과 연동선(Coil)의 감긴 방향이 일치되도록 한",
+    "caption": "[그림 4-2] 실습 장비 구성",
     "page": 55,
     "file": "assets/manual_figures/fig_4_2.png",
     "width": 990,
@@ -254,7 +254,7 @@
   "[그림 4-6]": {
     "figId": "4-6",
     "safeId": "4_6",
-    "caption": "[그림 4-6] ",
+    "caption": "[그림 4-6] 영구자석 직류 발전기 회로도",
     "page": 70,
     "file": "assets/manual_figures/fig_4_6.png",
     "width": 990,
@@ -353,8 +353,8 @@
   "[그림 4-18]": {
     "figId": "4-18",
     "safeId": "4_18",
-    "caption": "[그림 4-18] 과 같이 각 모듈간 회로를 구성한다. 이때 연결 코드가 회전자에 끼지 않",
-    "page": 109,
+    "caption": "[그림 4-18] 회전계자형 단상교류 발전기 회로도",
+    "page": 108,
     "file": "assets/manual_figures/fig_4_18.png",
     "width": 990,
     "height": 329
@@ -362,8 +362,8 @@
   "[그림 4-19]": {
     "figId": "4-19",
     "safeId": "4_19",
-    "caption": "[그림 4-19] 와 [그림 4-20]을 참조하여 회로를 결선한다.",
-    "page": 116,
+    "caption": "[그림 4-19] 장비 결선도",
+    "page": 115,
     "file": "assets/manual_figures/fig_4_19.png",
     "width": 990,
     "height": 329
@@ -380,8 +380,8 @@
   "[그림 4-21]": {
     "figId": "4-21",
     "safeId": "4_21",
-    "caption": "[그림 4-21] 과 [그림 4-22]를 참조하여 2극 회전자의 회전 계자에 AC 18[V]가 공급되",
-    "page": 123,
+    "caption": "[그림 4-21] 장비 결선도",
+    "page": 121,
     "file": "assets/manual_figures/fig_4_21.png",
     "width": 990,
     "height": 329
@@ -425,8 +425,8 @@
   "[그림 4-27]": {
     "figId": "4-27",
     "safeId": "4_27",
-    "caption": "[그림 4-27] 처럼 Y 결선 때의 백열전구의 밝기는 차이가 있는지 확인한다.",
-    "page": 131,
+    "caption": "[그림 4-27] 3상 발전기와 부하의 Y결선",
+    "page": 130,
     "file": "assets/manual_figures/fig_4_27.png",
     "width": 990,
     "height": 297
@@ -443,8 +443,8 @@
   "[그림 4-29]": {
     "figId": "4-29",
     "safeId": "4_29",
-    "caption": "[그림 4-29] 와 같이 회로를 결선한다. 이때 3상 부하로 사용될 백열전구는 6[V]용으",
-    "page": 137,
+    "caption": "[그림 4-29] 회전 전기자형 3상 발전기 회로도",
+    "page": 136,
     "file": "assets/manual_figures/fig_4_29.png",
     "width": 990,
     "height": 329
@@ -461,11 +461,11 @@
   "[그림 4-31]": {
     "figId": "4-31",
     "safeId": "4_31",
-    "caption": "[그림 4-31] 과 [그림 4-32]를 참조하여 슬립링과 접속된 3개의 브러시는 안쪽부터 회",
-    "page": 144,
+    "caption": "[그림 4-31] 장비 결선도",
+    "page": 143,
     "file": "assets/manual_figures/fig_4_31.png",
-    "width": 990,
-    "height": 84
+    "width": 1280,
+    "height": 853
   },
   "[그림 4-32]": {
     "figId": "4-32",
@@ -551,7 +551,7 @@
   "[그림 5-9]": {
     "figId": "5-9",
     "safeId": "5_9",
-    "caption": "[그림 5-9] 는 전동기에서의 에너지 변환의 모양을 나타낸 것이다. 변환 과정에서 손실이",
+    "caption": "[그림 5-9] 전동기와 에너지 변환",
     "page": 159,
     "file": "assets/manual_figures/fig_5_9.png",
     "width": 990,
@@ -659,8 +659,8 @@
   "[그림 6-2]": {
     "figId": "6-2",
     "safeId": "6_2",
-    "caption": "[그림 6-2] 의 회로처럼 전원 공급기로부터 출력된 DC 전원을 회전자의 코일에 연결",
-    "page": 179,
+    "caption": "[그림 6-2] 플레밍의 왼손법칙에 의한 전자력 발생",
+    "page": 178,
     "file": "assets/manual_figures/fig_6_2.png",
     "width": 990,
     "height": 329
@@ -686,8 +686,8 @@
   "[그림 6-5]": {
     "figId": "6-5",
     "safeId": "6_5",
-    "caption": "[그림 6-5] 와 [그림 6-6]를 참조하여 직권 전동기의 회로를 결선한다.",
-    "page": 191,
+    "caption": "[그림 6-5] 장비 결선도",
+    "page": 189,
     "file": "assets/manual_figures/fig_6_5.png",
     "width": 990,
     "height": 329
@@ -704,8 +704,8 @@
   "[그림 6-7]": {
     "figId": "6-7",
     "safeId": "6_7",
-    "caption": "[그림 6-7] 과 [그림 6-8]을 참조하여 분권전동기의 회로를 결선한다.",
-    "page": 196,
+    "caption": "[그림 6-7] 장비 결선도",
+    "page": 195,
     "file": "assets/manual_figures/fig_6_7.png",
     "width": 990,
     "height": 329
@@ -722,8 +722,8 @@
   "[그림 6-9]": {
     "figId": "6-9",
     "safeId": "6_9",
-    "caption": "[그림 6-9] 와 [그림 6-10]을 참조하여 복권전동기의 회로를 결선한다.",
-    "page": 203,
+    "caption": "[그림 6-9] 장비 결선도",
+    "page": 202,
     "file": "assets/manual_figures/fig_6_9.png",
     "width": 990,
     "height": 329
@@ -740,8 +740,8 @@
   "[그림 6-11]": {
     "figId": "6-11",
     "safeId": "6_11",
-    "caption": "[그림 6-11] 과 [그림 6-12]를 참조하여 교류 정류자 전동기의 실습 회로를 결선한다.",
-    "page": 211,
+    "caption": "[그림 6-11] 결선도",
+    "page": 209,
     "file": "assets/manual_figures/fig_6_11.png",
     "width": 990,
     "height": 329
@@ -749,7 +749,7 @@
   "[그림 6-12]": {
     "figId": "6-12",
     "safeId": "6_12",
-    "caption": "[그림 6-12] ",
+    "caption": "[그림 6-12] 교류 정류자 전동기 실습 회로도",
     "page": 210,
     "file": "assets/manual_figures/fig_6_12.png",
     "width": 990,
@@ -776,8 +776,8 @@
   "[그림 6-15]": {
     "figId": "6-15",
     "safeId": "6_15",
-    "caption": "[그림 6-15] 와 [그림 6-16]을 참조하여 회전 변류기와 유도 전동기를 결선한다.",
-    "page": 225,
+    "caption": "[그림 6-15] 결선도",
+    "page": 224,
     "file": "assets/manual_figures/fig_6_15.png",
     "width": 990,
     "height": 329
@@ -803,8 +803,8 @@
   "[그림 6-18]": {
     "figId": "6-18",
     "safeId": "6_18",
-    "caption": "[그림 6-18] 과 [그림 6-19]를 참조하여 각 모듈 및 보드를 결선한다.",
-    "page": 233,
+    "caption": "[그림 6-18] 결선도",
+    "page": 232,
     "file": "assets/manual_figures/fig_6_18.png",
     "width": 990,
     "height": 329
@@ -830,8 +830,8 @@
   "[그림 6-21]": {
     "figId": "6-21",
     "safeId": "6_21",
-    "caption": "[그림 6-21] 과 [그림 6-22]를 참조하여 회로를 결선한다.",
-    "page": 241,
+    "caption": "[그림 6-21] 장비 결선도",
+    "page": 240,
     "file": "assets/manual_figures/fig_6_21.png",
     "width": 990,
     "height": 329
