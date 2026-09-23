@@ -71,20 +71,22 @@ export class CableRouter {
       useTopDuct = false;
     }
 
-    // 덕트 Y선 계산 및 안전 마진 클램핑 (상단/하단 잘림 100% 방지)
+    // 덕트 Y선 계산 및 안전 마진 클램핑 (상단/하단 잘림 및 모듈 가림 100% 방지)
+    // 차선 스택 시 모듈 안쪽이 아닌 모듈 바깥쪽(트러프 방향)으로 순차 적층
+    const laneOffset = Math.ceil(wireIndex / 2) * 4;
     let ductY;
     if (useTopDuct) {
-      ductY = topDuctBase + (laneOffset * 0.5);
+      ductY = topDuctBase - laneOffset;
       // 최소 14px 유지하여 상단 프레임 밖으로 절대 나가지 않음
       ductY = Math.max(14, ductY);
     } else {
-      ductY = bottomDuctBase + (laneOffset * 0.5);
-      // 최대 canvasH - 22px 유지하여 하단 서랍/경계 밖으로 절대 나가지 않음
-      ductY = Math.min(canvasH - 22, ductY);
+      ductY = bottomDuctBase + laneOffset;
+      // 최대 canvasH - 24px 유지하여 하단 서랍/경계 밖으로 절대 나가지 않음
+      ductY = Math.min(canvasH - 24, ductY);
     }
 
-    // 단자 진출입 스템(Stem) 거리: 단자에서 수직으로 12px 이동 후 덕트로 회전
-    const stemLen = 12;
+    // 단자 진출입 스템(Stem) 거리: 단자에서 수직으로 18px 직진하여 인접 단자/블럭 걸침 방지
+    const stemLen = 18;
     const stemOffsetA = (ptA.y > ductY) ? -stemLen : stemLen;
     const stemOffsetB = (ptB.y > ductY) ? -stemLen : stemLen;
 
@@ -106,7 +108,7 @@ export class CableRouter {
       ptB
     ];
 
-    return this.buildSmoothPathFromWaypoints(waypoints, 14);
+    return this.buildSmoothPathFromWaypoints(waypoints, 16);
   }
 
   /**

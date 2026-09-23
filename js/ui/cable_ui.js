@@ -196,25 +196,23 @@ export class CableUI {
 
     let topDuct, bottomDuct, midY;
 
-    if (topDuctEl && bottomDuctEl) {
-      const tRect = topDuctEl.getBoundingClientRect();
-      const bRect = bottomDuctEl.getBoundingClientRect();
-      topDuct = (tRect.top + tRect.height / 2) - svgRect.top;
-      bottomDuct = (bRect.top + bRect.height / 2) - svgRect.top;
-      midY = (topDuct + bottomDuct) / 2;
-    } else if (firstMod) {
+    if (firstMod) {
       const mRect = firstMod.getBoundingClientRect();
       const modTop = mRect.top - svgRect.top;
       const modBottom = mRect.bottom - svgRect.top;
-      topDuct = Math.max(20, modTop - 4);
-      bottomDuct = Math.min(svgRect.height - 24, modBottom + 4);
+      // 상단 덕트: 모듈 최상단보다 28px 충분히 위로 띄워 모듈 헤더/블럭 가림을 원천 차단
+      // 캔버스 최상단 테두리에 잘리지 않도록 최소 16px 안전 여백 강제
+      topDuct = Math.max(16, modTop - 28);
+      // 하단 덕트: 모듈 최하단보다 28px 충분히 아래로 띄워 하단 단자/스위치 가림을 원천 차단
+      // 캔버스 바닥 및 계측 서랍에 가리지 않도록 canvasHeight - 26px 안전 여백 강제
+      bottomDuct = Math.min(svgRect.height - 26, modBottom + 28);
       midY = (modTop + modBottom) / 2;
     } else if (rackEl) {
       const rRect = rackEl.getBoundingClientRect();
       const rTop = rRect.top - svgRect.top;
       const rBottom = rRect.bottom - svgRect.top;
-      topDuct = Math.max(20, rTop + 14);
-      bottomDuct = Math.min(svgRect.height - 24, rBottom - 14);
+      topDuct = Math.max(16, rTop - 6);
+      bottomDuct = Math.min(svgRect.height - 26, rBottom + 6);
       midY = (rTop + rBottom) / 2;
     } else {
       topDuct = 35;
