@@ -589,6 +589,30 @@ class SimulatorApp {
     }, 60);
   }
 
+  /**
+   * 현재 실습에 자동 구동 유닛(IEG-6030-11)을 추가하여 자동 회전 구동
+   */
+  addDriveMotorToCurrentExp() {
+    const exp = EXPERIMENTS_DATA.find(e => e.id === this.currentExpId);
+    if (!exp) return;
+
+    // 이미 있으면 무시
+    if (exp.modules.includes('IEG-6030-11')) return;
+
+    // 11번 모듈 추가 + 벨트 연결 설정
+    exp.modules.push('IEG-6030-11');
+    if (exp.assemblyConfig) {
+      exp.assemblyConfig.beltInstalled = true;
+    }
+
+    // 연속 회전 해제
+    this.engine.state.continuousSpin = false;
+    this.engine.state.manualRpm = 0;
+
+    // 실험 재로드
+    this.loadExperiment(this.currentExpId);
+  }
+
   updateSidebarGuide(exp) {
     const titleEl = document.getElementById('guide_exp_title');
     const goalEl = document.getElementById('guide_exp_goal');
@@ -1045,7 +1069,10 @@ class SimulatorApp {
 
     // 수동 회전 중인 경우 자연스러운 회전 감속(inertia friction decay)
     if (this.engine.state.manualRpm > 0) {
-      this.engine.state.manualRpm = Math.max(0, this.engine.state.manualRpm - dt * 180);
+      if (!this.engine.state.continuousSpin) {
+        // 단발 회전: 서서히 감속 (약 2.5초에 정지)
+        this.engine.state.manualRpm = Math.max(0, this.engine.state.manualRpm - dt * 120);
+      }
       this.engine.solve();
     }
 

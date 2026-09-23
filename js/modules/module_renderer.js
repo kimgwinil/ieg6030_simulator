@@ -177,10 +177,21 @@ export class ModuleRenderer {
     if (def.id === 'IEG-6030-10') {
       const hasDriveMotor = this.engine.modules.has('IEG-6030-11');
       const manualToolbar = !hasDriveMotor ? `
-        <div class="manual-spin-toolbar" style="position:absolute; left:37%; bottom:3.5%; transform:translateX(-50%); display:flex; gap:6px; z-index:10; background:rgba(15,23,42,0.92); padding:4px 8px; border-radius:6px; border:1px solid #38bdf8; box-shadow:0 4px 12px rgba(0,0,0,0.6);">
-          <span style="font-size:11px; color:#94a3b8; font-weight:700; align-self:center;">수동 회전:</span>
-          <button type="button" class="btn btn-xs btn-primary py-0 px-2" id="btn_manual_spin_cw" style="font-size:11px; font-weight:700; cursor:pointer;" title="시계방향(CW)으로 빠르게 회전">↷ CW (시계)</button>
-          <button type="button" class="btn btn-xs btn-outline-info py-0 px-2" id="btn_manual_spin_ccw" style="font-size:11px; font-weight:700; cursor:pointer;" title="반시계방향(CCW)으로 빠르게 회전">↶ CCW (반시계)</button>
+        <div class="manual-spin-toolbar" style="position:absolute; left:50%; bottom:2%; transform:translateX(-50%); display:flex; flex-direction:column; gap:4px; z-index:10; background:rgba(15,23,42,0.95); padding:6px 10px; border-radius:6px; border:1px solid #38bdf8; box-shadow:0 4px 12px rgba(0,0,0,0.6); pointer-events:auto;">
+          <div style="display:flex; align-items:center; gap:4px;">
+            <span style="font-size:10px; color:#94a3b8; font-weight:700;">🖐 수동 회전</span>
+            <button type="button" id="btn_manual_spin_cw" style="font-size:10px; font-weight:700; cursor:pointer; background:#2563eb; color:#fff; border:none; border-radius:3px; padding:2px 6px;">↷ CW</button>
+            <button type="button" id="btn_manual_spin_ccw" style="font-size:10px; font-weight:700; cursor:pointer; background:#0891b2; color:#fff; border:none; border-radius:3px; padding:2px 6px;">↶ CCW</button>
+          </div>
+          <div style="display:flex; align-items:center; gap:4px;">
+            <span style="font-size:10px; color:#94a3b8; font-weight:700;">🔄 연속 회전</span>
+            <button type="button" id="btn_continuous_spin" style="font-size:10px; font-weight:700; cursor:pointer; background:#16a34a; color:#fff; border:none; border-radius:3px; padding:2px 6px;" data-active="false">▶ 시작 (150 RPM)</button>
+            <button type="button" id="btn_continuous_stop" style="font-size:10px; font-weight:700; cursor:pointer; background:#dc2626; color:#fff; border:none; border-radius:3px; padding:2px 6px;">■ 정지</button>
+          </div>
+          <div style="border-top:1px solid #334155; padding-top:3px; display:flex; align-items:center; gap:4px;">
+            <span style="font-size:10px; color:#64748b; font-weight:600;">⚡ 자동 구동</span>
+            <button type="button" id="btn_add_drive_unit" style="font-size:10px; font-weight:700; cursor:pointer; background:#7c3aed; color:#fff; border:none; border-radius:3px; padding:2px 6px;">+ 구동 유닛(11) 추가</button>
+          </div>
         </div>
       ` : '';
       assemblyHtml = `
@@ -330,9 +341,10 @@ export class ModuleRenderer {
         }
       }
 
-      // 4-1. 계철 프레임 회전자 수동 회전 버튼 (구동모터가 없는 실습에서 손으로 회전시키는 실습 지원)
+      // 4-1. 계철 프레임 회전자 수동 회전 버튼
       const spinCwBtn = e.target.closest('#btn_manual_spin_cw');
       if (spinCwBtn) {
+        this.engine.state.continuousSpin = false;
         this.engine.state.manualRpm = 300;
         this.engine.state.manualDir = 'CW';
         this.engine.solve();
@@ -340,9 +352,51 @@ export class ModuleRenderer {
       }
       const spinCcwBtn = e.target.closest('#btn_manual_spin_ccw');
       if (spinCcwBtn) {
+        this.engine.state.continuousSpin = false;
         this.engine.state.manualRpm = 300;
         this.engine.state.manualDir = 'CCW';
         this.engine.solve();
+        return;
+      }
+
+      // 4-2. 연속 회전 시작
+      const contSpinBtn = e.target.closest('#btn_continuous_spin');
+      if (contSpinBtn) {
+        this.engine.state.continuousSpin = true;
+        this.engine.state.manualRpm = 150;
+        this.engine.state.manualDir = 'CW';
+        contSpinBtn.textContent = '⏩ 회전 중...';
+        contSpinBtn.style.background = '#059669';
+        this.engine.solve();
+        return;
+      }
+
+      // 4-3. 연속 회전 정지
+      const contStopBtn = e.target.closest('#btn_continuous_stop');
+      if (contStopBtn) {
+        this.engine.state.continuousSpin = false;
+        this.engine.state.manualRpm = 0;
+        const startBtn = document.getElementById('btn_continuous_spin');
+        if (startBtn) {
+          startBtn.textContent = '▶ 시작 (150 RPM)';
+          startBtn.style.background = '#16a34a';
+        }
+        this.engine.solve();
+        return;
+      }
+
+      // 4-4. 자동 구동 유닛(11) 추가
+      const addDriveBtn = e.target.closest('#btn_add_drive_unit');
+      if (addDriveBtn) {
+        // 현재 실험에 IEG-6030-11 추가 후 재로드
+        if (window.app) {
+          const exp = window.app.currentExpId;
+          const expData = window.app.engine.constructor.name; // trigger re-render
+          // 직접 modules 배열에 11번 추가
+          const expList = window.EXPERIMENTS_DATA || [];
+          // app 레벨에서 처리
+          window.app.addDriveMotorToCurrentExp();
+        }
         return;
       }
     });
