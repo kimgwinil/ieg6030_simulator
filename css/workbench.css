@@ -436,32 +436,16 @@
 }
 
 .dpm-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: clamp(4px, 1.2vw, 7px);
-  font-weight: 800;
-  color: #64748b;
-  letter-spacing: 0.2px;
-  text-transform: uppercase;
-  line-height: 1;
-  margin-bottom: 1px;
+  display: none;
 }
 
 .dpm-range {
-  background: #1e293b;
-  color: #94a3b8;
-  padding: 0 2px;
-  border-radius: 1px;
-  font-size: clamp(3px, 1vw, 6px);
-  font-weight: 700;
-  border: 0.5px solid #334155;
-  white-space: nowrap;
+  display: none;
 }
 
 .dpm-body {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: center;
   gap: 2px;
   margin: 0;
@@ -471,7 +455,7 @@
 
 .dpm-num {
   font-family: 'Courier New', 'Consolas', monospace;
-  font-size: clamp(7px, 2.2vw, 14px);
+  font-size: clamp(10px, 3.5vw, 22px);
   font-weight: 900;
   letter-spacing: 0.5px;
   line-height: 1;
@@ -493,7 +477,7 @@
 }
 
 .dpm-unit {
-  font-size: clamp(5px, 1.2vw, 9px);
+  font-size: clamp(7px, 2vw, 14px);
   font-weight: 800;
   opacity: 0.9;
 }
@@ -502,9 +486,7 @@
 .theme-amber .dpm-unit { color: #fbbf24; }
 
 .dpm-footer {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
+  display: none;
 }
 
 .dpm-bar-track {
@@ -621,6 +603,10 @@
   inset: 0;
   z-index: 4;
   pointer-events: none;
+}
+
+.manual-spin-toolbar {
+  pointer-events: auto !important;
 }
 
 /* 케이블 SVG 오버레이 */

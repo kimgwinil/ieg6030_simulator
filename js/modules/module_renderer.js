@@ -177,20 +177,17 @@ export class ModuleRenderer {
     if (def.id === 'IEG-6030-10') {
       const hasDriveMotor = this.engine.modules.has('IEG-6030-11');
       const manualToolbar = !hasDriveMotor ? `
-        <div class="manual-spin-toolbar" style="position:absolute; left:50%; bottom:2%; transform:translateX(-50%); display:flex; flex-direction:column; gap:4px; z-index:10; background:rgba(15,23,42,0.95); padding:6px 10px; border-radius:6px; border:1px solid #38bdf8; box-shadow:0 4px 12px rgba(0,0,0,0.6); pointer-events:auto;">
-          <div style="display:flex; align-items:center; gap:4px;">
-            <span style="font-size:10px; color:#94a3b8; font-weight:700;">🖐 수동 회전</span>
-            <button type="button" id="btn_manual_spin_cw" style="font-size:10px; font-weight:700; cursor:pointer; background:#2563eb; color:#fff; border:none; border-radius:3px; padding:2px 6px;">↷ CW</button>
-            <button type="button" id="btn_manual_spin_ccw" style="font-size:10px; font-weight:700; cursor:pointer; background:#0891b2; color:#fff; border:none; border-radius:3px; padding:2px 6px;">↶ CCW</button>
+        <div class="manual-spin-toolbar" style="position:absolute; left:50%; bottom:6%; transform:translateX(-50%); display:flex; flex-direction:column; gap:3px; z-index:15; background:rgba(15,23,42,0.95); padding:5px 8px; border-radius:5px; border:1px solid #38bdf8; box-shadow:0 4px 12px rgba(0,0,0,0.6); pointer-events:auto;">
+          <div style="display:flex; align-items:center; gap:3px; flex-wrap:wrap;">
+            <span style="font-size:9px; color:#94a3b8; font-weight:700;">🖐 수동</span>
+            <button type="button" id="btn_manual_spin_cw" style="font-size:9px; font-weight:700; cursor:pointer; background:#2563eb; color:#fff; border:none; border-radius:3px; padding:2px 5px;">↷ CW</button>
+            <button type="button" id="btn_manual_spin_ccw" style="font-size:9px; font-weight:700; cursor:pointer; background:#0891b2; color:#fff; border:none; border-radius:3px; padding:2px 5px;">↶ CCW</button>
+            <span style="font-size:9px; color:#94a3b8; font-weight:700; margin-left:2px;">🔄</span>
+            <button type="button" id="btn_continuous_spin" style="font-size:9px; font-weight:700; cursor:pointer; background:#16a34a; color:#fff; border:none; border-radius:3px; padding:2px 5px;" data-active="false">▶ 연속</button>
+            <button type="button" id="btn_continuous_stop" style="font-size:9px; font-weight:700; cursor:pointer; background:#dc2626; color:#fff; border:none; border-radius:3px; padding:2px 5px;">■ 정지</button>
           </div>
-          <div style="display:flex; align-items:center; gap:4px;">
-            <span style="font-size:10px; color:#94a3b8; font-weight:700;">🔄 연속 회전</span>
-            <button type="button" id="btn_continuous_spin" style="font-size:10px; font-weight:700; cursor:pointer; background:#16a34a; color:#fff; border:none; border-radius:3px; padding:2px 6px;" data-active="false">▶ 시작 (150 RPM)</button>
-            <button type="button" id="btn_continuous_stop" style="font-size:10px; font-weight:700; cursor:pointer; background:#dc2626; color:#fff; border:none; border-radius:3px; padding:2px 6px;">■ 정지</button>
-          </div>
-          <div style="border-top:1px solid #334155; padding-top:3px; display:flex; align-items:center; gap:4px;">
-            <span style="font-size:10px; color:#64748b; font-weight:600;">⚡ 자동 구동</span>
-            <button type="button" id="btn_add_drive_unit" style="font-size:10px; font-weight:700; cursor:pointer; background:#7c3aed; color:#fff; border:none; border-radius:3px; padding:2px 6px;">+ 구동 유닛(11) 추가</button>
+          <div style="border-top:1px solid #334155; padding-top:2px; display:flex; align-items:center; gap:3px;">
+            <button type="button" id="btn_add_drive_unit" style="font-size:9px; font-weight:700; cursor:pointer; background:#7c3aed; color:#fff; border:none; border-radius:3px; padding:2px 5px;">⚡ + 구동 유닛(11) 추가</button>
           </div>
         </div>
       ` : '';
@@ -206,8 +203,8 @@ export class ModuleRenderer {
             </defs>
             <g id="assembly_svg_content"></g>
           </svg>
-          ${manualToolbar}
         </div>
+        ${manualToolbar}
       `;
     } else if (def.id === 'IEG-6030-11') {
       assemblyHtml = `
