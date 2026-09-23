@@ -1,22 +1,16 @@
 {
-  "version": 2,
-  "cleanUrls": true,
   "headers": [
     {
-      "source": "/(.*)",
+      "source": "/css/(.*)",
       "headers": [
-        { "key": "Access-Control-Allow-Origin", "value": "*" }
+        { "key": "Cache-Control", "value": "no-cache, must-revalidate" }
       ]
-    }
-  ],
-  "routes": [
-    {
-      "src": "/terminal_audit.html",
-      "dest": "/terminal_audit.html"
     },
     {
-      "src": "/(.*)",
-      "dest": "/$1"
+      "source": "/js/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, must-revalidate" }
+      ]
     }
   ]
 }
