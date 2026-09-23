@@ -56,10 +56,6 @@ export class CableRouter {
       return this.generateLocalLoop(ptA, ptB, wireIndex);
     }
 
-    // 차선 오프셋 계산 (전선이 겹치지 않도록 차선별 5px 간격 분산)
-    const laneStep = 5;
-    const laneOffset = ((wireIndex % 2 === 0 ? 1 : -1) * Math.ceil(wireIndex / 2)) * laneStep;
-
     // A와 B의 평균 세로 위치로 상단 덕트 vs 하단 덕트 결정
     const avgY = (ptA.y + ptB.y) / 2;
     let useTopDuct = avgY < midY;
