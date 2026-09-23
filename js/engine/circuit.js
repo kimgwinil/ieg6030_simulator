@@ -150,13 +150,16 @@ export class CircuitEngine {
         // 09번 검류계 코일 도통
         addEdge(`${mId}:POS`, `${mId}:NEG`);
       } else if (mId === 'IEG-6030-03') {
-        // 03번 램프 부하 단자
+        // 03번 램프 부하 단자 (A-T1-lamp-T4-AP / B-T2-lamp-T5-BP / C-T3-lamp-T6-CP)
         addEdge(`${mId}:A`, `${mId}:T1`);
         addEdge(`${mId}:B`, `${mId}:T2`);
         addEdge(`${mId}:C`, `${mId}:T3`);
         addEdge(`${mId}:T1`, `${mId}:T4`);
         addEdge(`${mId}:T2`, `${mId}:T5`);
         addEdge(`${mId}:T3`, `${mId}:T6`);
+        addEdge(`${mId}:T4`, `${mId}:AP`);
+        addEdge(`${mId}:T5`, `${mId}:BP`);
+        addEdge(`${mId}:T6`, `${mId}:CP`);
       } else if (mId === 'IEG-6030-05') {
         // 05번 RLC 부하
         addEdge(`${mId}:T1`, `${mId}:T4`);
@@ -315,21 +318,32 @@ export class CircuitEngine {
     // 계자전류 계산
     let iField = 0;
     // 전원공급기에서 계자권선으로 공급되는지 확인 (타여자)
+    // 경로: PSU DC_POS → (직접 or 전류계08 경유) → (계자저항기01 경유) → 계철프레임10 C1
+    //       계철프레임10 D1 → (직접 or 계자저항기01 경유) → PSU DC_NEG
     const fieldConnectedToPsu = (
       this.areTerminalsConnected({ moduleId: 'IEG-6030-06', terminalId: 'DC_POS' }, { moduleId: 'IEG-6030-10', terminalId: 'C1' }) ||
-      this.areTerminalsConnected({ moduleId: 'IEG-6030-06', terminalId: 'DC_POS' }, { moduleId: 'IEG-6030-01', terminalId: 'T1' })
+      this.areTerminalsConnected({ moduleId: 'IEG-6030-06', terminalId: 'DC_POS' }, { moduleId: 'IEG-6030-01', terminalId: 'T1' }) ||
+      this.areTerminalsConnected({ moduleId: 'IEG-6030-06', terminalId: 'DC_POS' }, { moduleId: 'IEG-6030-08', terminalId: 'A_1A' }) ||
+      this.areTerminalsConnected({ moduleId: 'IEG-6030-06', terminalId: 'DC_POS' }, { moduleId: 'IEG-6030-08', terminalId: 'A_5A' })
     ) && (
       this.areTerminalsConnected({ moduleId: 'IEG-6030-06', terminalId: 'DC_NEG' }, { moduleId: 'IEG-6030-10', terminalId: 'D1' }) ||
-      this.areTerminalsConnected({ moduleId: 'IEG-6030-06', terminalId: 'DC_NEG' }, { moduleId: 'IEG-6030-01', terminalId: 'T2' })
+      this.areTerminalsConnected({ moduleId: 'IEG-6030-06', terminalId: 'DC_NEG' }, { moduleId: 'IEG-6030-01', terminalId: 'T2' }) ||
+      this.areTerminalsConnected({ moduleId: 'IEG-6030-06', terminalId: 'DC_NEG' }, { moduleId: 'IEG-6030-01', terminalId: 'T3' })
     );
 
     if (fieldConnectedToPsu && psuDcVolts > 0) {
       iField = psuDcVolts / (45.0 + rField);
     }
 
-    // 자여자(분권) 연결 확인: 전기자 출력(A1/B1)이 계자(C1/D1)와 병렬 연결되었는지
-    const isShuntConnected = this.areTerminalsConnected({ moduleId: 'IEG-6030-10', terminalId: 'A2' }, { moduleId: 'IEG-6030-10', terminalId: 'C1' }) &&
-                             this.areTerminalsConnected({ moduleId: 'IEG-6030-10', terminalId: 'B2' }, { moduleId: 'IEG-6030-10', terminalId: 'D1' });
+    // 자여자(분권) 연결 확인: 전기자 출력(A2/B2)이 계자(C1/D1)와 병렬 연결되었는지
+    // GEN-05: A2 → 01 T1, 01 T2 → C1, D1 → B2 (계자저항기 경유)
+    const isShuntConnected = (
+      this.areTerminalsConnected({ moduleId: 'IEG-6030-10', terminalId: 'A2' }, { moduleId: 'IEG-6030-10', terminalId: 'C1' }) ||
+      this.areTerminalsConnected({ moduleId: 'IEG-6030-10', terminalId: 'A2' }, { moduleId: 'IEG-6030-01', terminalId: 'T1' })
+    ) && (
+      this.areTerminalsConnected({ moduleId: 'IEG-6030-10', terminalId: 'B2' }, { moduleId: 'IEG-6030-10', terminalId: 'D1' }) ||
+      this.areTerminalsConnected({ moduleId: 'IEG-6030-10', terminalId: 'B2' }, { moduleId: 'IEG-6030-01', terminalId: 'T3' })
+    );
 
     let genEmf = 0;
     let genTermVolt = 0;

@@ -5,15 +5,16 @@
 
 export class MachinePhysicsModel {
   constructor() {
-    // 발전기 기본 파라미터 (IEG 6030 교육용 소형기기 정격)
+    // 발전기 기본 파라미터 (IEG 6030 교육용 소형기기 정격, 교재 포화곡선 준거)
     this.generator = {
       poles: 2,               // 기본 2극
       armatureResistance: 2.5,// 전기자 저항 Ra [Ω]
       fieldResistance: 45.0,  // 계자 권선 저항 Rf [Ω]
       residualFluxVoltage: 1.8,// 잔류자기에 의한 초기 전압 E_res [V] @ 1800RPM
       saturationKe: 0.022,    // 기전력 계수
-      satConstant: 0.25,      // 포화 상수
-      maxNoLoadVoltage: 65.0, // 최대 무부하 전압 [V]
+      satConstant: 0.449,     // 포화 상수 (GEN-06: If=0.1A→18V, 0.4A→46V 최적화)
+      maxNoLoadVoltage: 95.5, // 포화 Emax [V] (Froelich 모델 최적화)
+      criticalRheostat: 80.0, // 자여자 임계 가변저항 [Ω] (이상 → 미확립)
       inertia: 0.05
     };
 
@@ -61,16 +62,23 @@ export class MachinePhysicsModel {
   /**
    * 자여자 분권 발전기 전압 확립 계산 (Building-Up Process)
    * 계자 저항선 R_f_total = R_coil + R_rheostat
+   * 임계 가변저항(criticalRheostat) 이상이면 전압 확립 실패
    */
   calculateSelfExcitedOperatingPoint(rpm, rRheostat) {
     if (rpm < 600) return { emf: 0, vTerminal: 0, ifield: 0, established: false };
 
     const speedRatio = rpm / 1800.0;
     const rTotal = this.generator.fieldResistance + rRheostat;
+    const critR = this.generator.criticalRheostat || 80.0;
+
+    // 임계 가변저항 이상이면 전압 확립 실패 (교재 GEN-05 준거)
+    if (rRheostat >= critR) {
+      const eRes = this.generator.residualFluxVoltage * speedRatio;
+      return { emf: eRes, vTerminal: eRes, ifield: eRes / rTotal, established: false };
+    }
 
     // 수치적 교점 탐색 (0 ~ 1.5A)
     let bestIf = 0;
-    let maxDiff = -999;
     let established = false;
 
     for (let curIf = 0.01; curIf <= 1.5; curIf += 0.005) {
@@ -80,21 +88,21 @@ export class MachinePhysicsModel {
         bestIf = curIf;
         established = true;
       } else if (established) {
-        // 교점 통과
         break;
       }
     }
 
     if (!established) {
-      // 임계 저항(Critical resistance) 초과로 전압 확립 실패 -> 잔류전압만 유지
       const eRes = this.generator.residualFluxVoltage * speedRatio;
       return { emf: eRes, vTerminal: eRes, ifield: eRes / rTotal, established: false };
     }
 
     const finalEmf = this.calculateGeneratorEmf(rpm, bestIf, false);
+    // 단자전압 = EMF - If * Ra (무부하이므로 Ia ≈ If)
+    const vTerminal = Math.max(0, finalEmf - bestIf * this.generator.armatureResistance);
     return {
       emf: finalEmf,
-      vTerminal: finalEmf,
+      vTerminal,
       ifield: bestIf,
       established: true
     };
