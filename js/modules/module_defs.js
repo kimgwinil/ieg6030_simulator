@@ -210,7 +210,7 @@ export const MODULE_DEFS = {
       {
         id: 'M_AC_VOLT',
         type: 'digital_panel',
-        label: 'AC VOLTMETER',
+        label: 'AC VOLT',
         unit: 'V',
         x: 41.2,
         y: 15.8,
@@ -224,7 +224,7 @@ export const MODULE_DEFS = {
       {
         id: 'M_DC_VOLT',
         type: 'digital_panel',
-        label: 'DC VOLTMETER',
+        label: 'DC VOLT',
         unit: 'V',
         x: 69.9,
         y: 15.8,

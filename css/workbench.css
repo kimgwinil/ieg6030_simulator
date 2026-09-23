@@ -541,6 +541,33 @@
 .theme-green .dpm-unit { color: #6ee7b7; }
 .theme-amber .dpm-unit { color: #fde68a; }
 
+/* 컴팩트 미터 (전원공급기 06 등 소형 미터 창) 반응형 최적화:
+   창 크기가 작을 때 스케일 뱃지 및 바를 감추고 명칭과 수치를 겹침 없이 시원하게 표시 */
+@container (max-height: 80px) or (max-width: 95px) {
+  .dpm-footer {
+    display: none !important;
+  }
+  .dpm-range {
+    display: none !important;
+  }
+  .dpm-header {
+    border-bottom: none;
+    padding-bottom: 0;
+    justify-content: center;
+  }
+  .dpm-title {
+    font-size: clamp(6.5px, 7.5cqw, 9.5px);
+    text-align: center;
+    color: #94a3b8;
+  }
+  .dpm-body {
+    margin: 1px 0;
+  }
+  .dpm-num {
+    font-size: clamp(12px, 34cqh, 22px);
+  }
+}
+
 /* 3. 하단 레벨 바 및 눈금 (스케일 게이지) */
 .dpm-footer {
   display: flex;
@@ -837,9 +864,107 @@
 
 .oscilloscope-controls {
   display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.scope-ctrl-row {
+  display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 8px;
+  gap: 6px;
+}
+
+.scope-ctrl-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.scope-ctrl-item label, .scope-ctrl-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+.scope-select {
+  background: #1e293b;
+  color: #38bdf8;
+  border: 1px solid #475569;
+  border-radius: 3px;
+  padding: 2px 4px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  outline: none;
+}
+.scope-select:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 4px rgba(56, 189, 248, 0.5);
+}
+
+.scope-btn-group {
+  display: flex;
+  gap: 2px;
+}
+
+.btn-scope-sm {
+  background: #1e293b;
+  color: #e2e8f0;
+  border: 1px solid #475569;
+  border-radius: 3px;
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  line-height: 1;
+  transition: all 0.15s ease;
+}
+.btn-scope-sm:hover {
+  background: #334155;
+  color: #38bdf8;
+  border-color: #38bdf8;
+}
+
+.scope-action-group {
+  display: flex;
+  gap: 4px;
+}
+
+.btn-scope-auto {
+  background: #0284c7;
+  color: #fff;
+  border: 1px solid #38bdf8;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 800;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-scope-auto:hover {
+  background: #0369a1;
+  box-shadow: 0 0 6px rgba(56, 189, 248, 0.7);
+}
+
+.btn-scope-run {
+  background: #16a34a;
+  color: #fff;
+  border: 1px solid #4ade80;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 800;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-scope-run.paused {
+  background: #dc2626;
+  border-color: #f87171;
 }
 
 /* 실시간 전류 흐름 파티클 애니메이션 */

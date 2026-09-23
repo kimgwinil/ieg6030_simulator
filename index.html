@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>IEG-6030 전기기계 구조 실습 시뮬레이터</title>
   <!-- 스타일시트 로드 -->
-  <link rel="stylesheet" href="css/main.css?v=8">
-  <link rel="stylesheet" href="css/workbench.css?v=8">
-  <link rel="stylesheet" href="css/curriculum.css?v=8">
+  <link rel="stylesheet" href="css/main.css?v=9">
+  <link rel="stylesheet" href="css/workbench.css?v=9">
+  <link rel="stylesheet" href="css/curriculum.css?v=9">
 </head>
 <body>
 
@@ -255,9 +255,44 @@
           <div class="oscilloscope-box">
             <canvas id="oscilloscope_canvas" class="oscilloscope-screen"></canvas>
             <div class="oscilloscope-controls">
-              <span style="font-size:11px; color:#94a3b8;">TIME: 5ms/DIV</span>
-              <span style="font-size:11px; color:#94a3b8;">VOLT: 5V/DIV</span>
-              <button class="btn btn-sm" style="padding:2px 8px; font-size:11px;" onclick="window.app.scope.toggleRun()">Run/Stop</button>
+              <div class="scope-ctrl-row">
+                <div class="scope-ctrl-item">
+                  <label for="scope_volt_div">수직 VOLT:</label>
+                  <select id="scope_volt_div" class="scope-select">
+                    <option value="1">1V</option>
+                    <option value="2">2V</option>
+                    <option value="5">5V</option>
+                    <option value="10">10V</option>
+                    <option value="20" selected>20V</option>
+                    <option value="50">50V</option>
+                  </select>
+                </div>
+                <div class="scope-ctrl-item">
+                  <label for="scope_time_div">수평 TIME:</label>
+                  <select id="scope_time_div" class="scope-select">
+                    <option value="1">1ms</option>
+                    <option value="2">2ms</option>
+                    <option value="5">5ms</option>
+                    <option value="10" selected>10ms</option>
+                    <option value="20">20ms</option>
+                    <option value="50">50ms</option>
+                  </select>
+                </div>
+              </div>
+              <div class="scope-ctrl-row">
+                <div class="scope-ctrl-item">
+                  <span class="scope-ctrl-label">Y위치:</span>
+                  <div class="scope-btn-group">
+                    <button type="button" id="btn_scope_y_up" class="btn-scope-sm" title="파형 위로 이동">▲</button>
+                    <button type="button" id="btn_scope_y_zero" class="btn-scope-sm" title="중앙 0V 복귀">0</button>
+                    <button type="button" id="btn_scope_y_down" class="btn-scope-sm" title="파형 아래로 이동">▼</button>
+                  </div>
+                </div>
+                <div class="scope-action-group">
+                  <button type="button" id="btn_scope_auto" class="btn-scope-auto" title="수직/수평축 자동 최적화">AUTO</button>
+                  <button type="button" id="btn_scope_run" class="btn-scope-run" title="파형 정지 / 실행">Run/Stop</button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -359,6 +394,6 @@
   </main>
 
   <!-- 애플리케이션 모듈 진입 스크립트 -->
-  <script type="module" src="js/app.js?v=8"></script>
+  <script type="module" src="js/app.js?v=9"></script>
 </body>
 </html>
