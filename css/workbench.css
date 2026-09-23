@@ -457,10 +457,10 @@
 
 .dpm-title {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  font-size: clamp(7.5px, 7.2cqw, 10.5px);
+  font-size: clamp(6.5px, 6cqw, 8.5px);
   font-weight: 800;
   color: #94a3b8;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.2px;
   text-transform: uppercase;
   white-space: nowrap;
   overflow: hidden;
@@ -472,12 +472,12 @@
 
 .dpm-range {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
-  font-size: clamp(6.5px, 6.2cqw, 9.5px);
+  font-size: clamp(6px, 5.5cqw, 8px);
   font-weight: 700;
   color: #38bdf8;
   background: rgba(14, 165, 233, 0.15);
   border: 0.5px solid rgba(56, 189, 248, 0.4);
-  padding: 0 3px;
+  padding: 0 2px;
   border-radius: 2px;
   white-space: nowrap;
   flex-shrink: 0;
@@ -489,15 +489,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+  gap: 2px;
   width: 100%;
   flex: 1;
   min-height: 0;
   background: rgba(0, 0, 0, 0.5);
   border-radius: 3px;
   border: 1px solid rgba(255, 255, 255, 0.05);
-  margin: 2px 0;
-  padding: 0 4px;
+  margin: 1px 0;
+  padding: 0 2px;
   box-sizing: border-box;
   overflow: hidden;
 }
@@ -505,12 +505,13 @@
 .dpm-num {
   font-family: "Consolas", "SF Mono", "Roboto Mono", "Courier New", monospace;
   font-variant-numeric: tabular-nums;
-  font-size: clamp(13px, 24cqh, 24px);
+  font-size: clamp(9.5px, 13.5cqw, 16px);
   font-weight: 900;
-  letter-spacing: 0.5px;
+  letter-spacing: -0.2px;
   line-height: 1;
   white-space: nowrap;
   text-align: right;
+  flex-shrink: 0;
 }
 
 .theme-cyan .dpm-num {
@@ -530,19 +531,20 @@
 
 .dpm-unit {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  font-size: clamp(8.5px, 14cqh, 13px);
+  font-size: clamp(7.5px, 9cqw, 10.5px);
   font-weight: 800;
   line-height: 1;
   opacity: 0.9;
   white-space: nowrap;
   margin-top: 1px;
+  flex-shrink: 0;
 }
 .theme-cyan .dpm-unit { color: #7dd3fc; }
 .theme-green .dpm-unit { color: #6ee7b7; }
 .theme-amber .dpm-unit { color: #fde68a; }
 
-/* 컴팩트 미터 (전원공급기 06 등 소형 미터 창) 반응형 최적화:
-   창 크기가 작을 때 스케일 뱃지 및 바를 감추고 명칭과 수치를 겹침 없이 시원하게 표시 */
+/* 컴팩트 미터 (전원공급기 06, 계측기 08 등 소형 미터 창) 반응형 최적화:
+   창 크기가 작을 때 스케일 뱃지 및 바를 감추고 명칭과 수치를 겹침/잘림 없이 시원하게 표시 */
 @container (max-height: 80px) or (max-width: 95px) {
   .dpm-footer {
     display: none !important;
@@ -556,15 +558,20 @@
     justify-content: center;
   }
   .dpm-title {
-    font-size: clamp(6.5px, 7.5cqw, 9.5px);
+    font-size: clamp(6px, 6.5cqw, 8.5px);
     text-align: center;
     color: #94a3b8;
   }
   .dpm-body {
     margin: 1px 0;
+    padding: 0 4px;
   }
   .dpm-num {
-    font-size: clamp(12px, 34cqh, 22px);
+    font-size: clamp(9px, 13cqw, 15px);
+    letter-spacing: -0.2px;
+  }
+  .dpm-unit {
+    font-size: clamp(7px, 8.5cqw, 10px);
   }
 }
 
