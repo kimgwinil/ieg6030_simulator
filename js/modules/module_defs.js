@@ -281,7 +281,7 @@ export const MODULE_DEFS = {
         h: 26.8,
         minVal: 0,
         maxVal: 50,
-        range: '50V F.S.',
+        range: '0 ~ 50V',
         theme: 'cyan'
       },
       {
@@ -295,7 +295,7 @@ export const MODULE_DEFS = {
         h: 26.8,
         minVal: 0,
         maxVal: 5,
-        range: '5A F.S.',
+        range: '0 ~ 5A',
         theme: 'green'
       }
     ]
@@ -334,7 +334,7 @@ export const MODULE_DEFS = {
         h: 26.8,
         minVal: 0,
         maxVal: 50,
-        range: '50V F.S.',
+        range: '0 ~ 50V',
         theme: 'cyan'
       },
       {
@@ -348,7 +348,7 @@ export const MODULE_DEFS = {
         h: 26.8,
         minVal: 0,
         maxVal: 5,
-        range: '5A F.S.',
+        range: '0 ~ 5A',
         theme: 'green'
       }
     ]
@@ -381,7 +381,7 @@ export const MODULE_DEFS = {
         minVal: -500,
         maxVal: 500,
         isBipolar: true,
-        range: '±500mA F.S.',
+        range: '±500mA',
         theme: 'amber'
       }
     ],
