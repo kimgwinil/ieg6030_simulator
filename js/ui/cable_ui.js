@@ -189,11 +189,46 @@ export class CableUI {
    */
   render() {
     const svgRect = this.svg.getBoundingClientRect();
+    const topDuctEl = document.querySelector('.rack-cable-duct.top');
+    const bottomDuctEl = document.querySelector('.rack-cable-duct.bottom');
+    const firstMod = document.querySelector('.rack-module');
+    const rackEl = document.getElementById('equipment_rack');
+
+    let topDuct, bottomDuct, midY;
+
+    if (topDuctEl && bottomDuctEl) {
+      const tRect = topDuctEl.getBoundingClientRect();
+      const bRect = bottomDuctEl.getBoundingClientRect();
+      topDuct = (tRect.top + tRect.height / 2) - svgRect.top;
+      bottomDuct = (bRect.top + bRect.height / 2) - svgRect.top;
+      midY = (topDuct + bottomDuct) / 2;
+    } else if (firstMod) {
+      const mRect = firstMod.getBoundingClientRect();
+      const modTop = mRect.top - svgRect.top;
+      const modBottom = mRect.bottom - svgRect.top;
+      topDuct = Math.max(20, modTop - 4);
+      bottomDuct = Math.min(svgRect.height - 24, modBottom + 4);
+      midY = (modTop + modBottom) / 2;
+    } else if (rackEl) {
+      const rRect = rackEl.getBoundingClientRect();
+      const rTop = rRect.top - svgRect.top;
+      const rBottom = rRect.bottom - svgRect.top;
+      topDuct = Math.max(20, rTop + 14);
+      bottomDuct = Math.min(svgRect.height - 24, rBottom - 14);
+      midY = (rTop + rBottom) / 2;
+    } else {
+      topDuct = 35;
+      bottomDuct = Math.max(120, svgRect.height - 45);
+      midY = svgRect.height / 2;
+    }
+
     const rackBounds = {
       left: 0,
-      top: 30,
       right: svgRect.width,
-      bottom: svgRect.height - 30
+      canvasHeight: svgRect.height,
+      topDuct,
+      bottomDuct,
+      midY
     };
 
     // 회로 통전 상태 (전류가 실제로 흐르고 있는지)

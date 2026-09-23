@@ -26,11 +26,11 @@ export class CableRouter {
    */
   generatePath(ptA, ptB, wireIndex = 0, rackBounds = null, obstacles = []) {
     if (this.routingMode === 'CATENARY') {
-      return this.generateCatenaryPath(ptA, ptB, wireIndex);
+      return this.generateCatenaryPath(ptA, ptB, wireIndex, rackBounds);
     }
 
     if (this.routingMode === 'MANHATTAN') {
-      return this.generateManhattanPath(ptA, ptB, wireIndex);
+      return this.generateManhattanPath(ptA, ptB, wireIndex, rackBounds);
     }
 
     // 기본 모드: SMART_DUCT (장비 가림 회피 및 케이블 트러프 자동 정렬)
@@ -39,39 +39,54 @@ export class CableRouter {
 
   /**
    * 스마트 덕트 라우팅:
-   * 단자 위치가 상단에 가까우면 상단 덕트로, 하단에 가까우면 하단 덕트로 진출입.
-   * 덕트 내에서 다중 차선(Multi-lane)을 적용하여 전선 겹침 방지.
-   * 코너는 둥근 베지어 필렛 처리.
+   * 실제 랙 상단/하단 케이블 트러프(Duct) 중심선에 맞춰 배선.
+   * 위/아래로 너무 올라가거나 내려가서 잘리는 현상을 완벽히 방지.
+   * 다중 차선(Multi-lane)을 적용하여 전선 겹침 방지.
    */
   generateSmartDuctPath(ptA, ptB, wireIndex, rackBounds) {
-    const rackTop = rackBounds ? rackBounds.top : 30;
-    const rackBottom = rackBounds ? rackBounds.bottom : 680;
-    const rackHeight = rackBottom - rackTop;
+    const topDuctBase = (rackBounds && rackBounds.topDuct !== undefined) ? rackBounds.topDuct : 40;
+    const bottomDuctBase = (rackBounds && rackBounds.bottomDuct !== undefined) ? rackBounds.bottomDuct : 520;
+    const midY = (rackBounds && rackBounds.midY !== undefined) ? rackBounds.midY : (topDuctBase + bottomDuctBase) / 2;
+    const canvasH = (rackBounds && rackBounds.canvasHeight !== undefined) ? rackBounds.canvasHeight : 600;
 
-    // 차선 오프셋 계산 (중앙을 기준으로 양옆으로 교대 배치)
-    const laneOffset = ((wireIndex % 2 === 0 ? 1 : -1) * Math.ceil(wireIndex / 2)) * this.laneSpacing;
-
-    // A와 B의 상대적 세로 위치 (0 = 맨위, 1 = 맨아래)
-    const relYA = (ptA.y - rackTop) / rackHeight;
-    const relYB = (ptB.y - rackTop) / rackHeight;
-
-    // 둘 다 상반부에 있으면 상단 덕트, 둘 다 하반부에 있으면 하단 덕트
-    // 서로 다를 경우 전체 경로 길이를 최소화하거나 외곽 통로 경유
-    let useTopDuct = false;
-    if (relYA < 0.55 && relYB < 0.55) {
-      useTopDuct = true;
-    } else if (relYA >= 0.55 && relYB >= 0.55) {
-      useTopDuct = false;
-    } else {
-      // 하나는 위, 하나는 아래: 평균 높이에 따라 덕트 결정하거나 더 가까운 쪽 사용
-      useTopDuct = (relYA + relYB) < 1.0;
+    // 만약 동일 모듈 내 바로 인접한 단자라면 덕트까지 가지 않고 단축 루프 경로 생성
+    const dx = Math.abs(ptA.x - ptB.x);
+    const dy = Math.abs(ptA.y - ptB.y);
+    if (ptA.moduleId === ptB.moduleId && dx < 110 && dy < 150) {
+      return this.generateLocalLoop(ptA, ptB, wireIndex);
     }
 
-    const ductY = useTopDuct ? (rackTop - 18 + laneOffset * 0.7) : (rackBottom + 18 + laneOffset * 0.7);
+    // 차선 오프셋 계산 (전선이 겹치지 않도록 차선별 5px 간격 분산)
+    const laneStep = 5;
+    const laneOffset = ((wireIndex % 2 === 0 ? 1 : -1) * Math.ceil(wireIndex / 2)) * laneStep;
 
-    // 단자 진출입 스템(Stem) 거리: 단자에서 수직으로 살짝 나와서 모듈 외곽으로 이동
-    const stemOffsetA = (ptA.y > ductY) ? -18 : 18;
-    const stemOffsetB = (ptB.y > ductY) ? -18 : 18;
+    // A와 B의 평균 세로 위치로 상단 덕트 vs 하단 덕트 결정
+    const avgY = (ptA.y + ptB.y) / 2;
+    let useTopDuct = avgY < midY;
+
+    // 만약 두 단자 중 하나라도 상단에 가깝고 다른 하나도 하단 극단이 아니면 상단 덕트 우선
+    if (Math.min(ptA.y, ptB.y) < midY - 60 && Math.max(ptA.y, ptB.y) < midY + 50) {
+      useTopDuct = true;
+    } else if (Math.max(ptA.y, ptB.y) > midY + 60 && Math.min(ptA.y, ptB.y) > midY - 50) {
+      useTopDuct = false;
+    }
+
+    // 덕트 Y선 계산 및 안전 마진 클램핑 (상단/하단 잘림 100% 방지)
+    let ductY;
+    if (useTopDuct) {
+      ductY = topDuctBase + (laneOffset * 0.5);
+      // 최소 14px 유지하여 상단 프레임 밖으로 절대 나가지 않음
+      ductY = Math.max(14, ductY);
+    } else {
+      ductY = bottomDuctBase + (laneOffset * 0.5);
+      // 최대 canvasH - 22px 유지하여 하단 서랍/경계 밖으로 절대 나가지 않음
+      ductY = Math.min(canvasH - 22, ductY);
+    }
+
+    // 단자 진출입 스템(Stem) 거리: 단자에서 수직으로 12px 이동 후 덕트로 회전
+    const stemLen = 12;
+    const stemOffsetA = (ptA.y > ductY) ? -stemLen : stemLen;
+    const stemOffsetB = (ptB.y > ductY) ? -stemLen : stemLen;
 
     // 단자에서 수직으로 빠져나가는 1차 경유점
     const exitA = { x: ptA.x, y: ptA.y + stemOffsetA };
@@ -80,13 +95,6 @@ export class CableRouter {
     // 덕트 진입점 (단자 X 좌표 유지하면서 덕트 Y선으로 도달)
     const ductEntryA = { x: ptA.x, y: ductY };
     const ductEntryB = { x: ptB.x, y: ductY };
-
-    // 만약 동일 모듈 내 바로 인접한 단자라면 덕트까지 가지 않고 단축 필렛 경로 생성
-    const dx = Math.abs(ptA.x - ptB.x);
-    const dy = Math.abs(ptA.y - ptB.y);
-    if (ptA.moduleId === ptB.moduleId && dx < 120 && dy < 160) {
-      return this.generateLocalLoop(ptA, ptB, wireIndex);
-    }
 
     // 경로 제어점 배열: ptA -> exitA -> ductEntryA -> ductEntryB -> exitB -> ptB
     const waypoints = [
@@ -98,7 +106,7 @@ export class CableRouter {
       ptB
     ];
 
-    return this.buildSmoothPathFromWaypoints(waypoints, 16);
+    return this.buildSmoothPathFromWaypoints(waypoints, 14);
   }
 
   /**
@@ -107,7 +115,7 @@ export class CableRouter {
   generateLocalLoop(ptA, ptB, wireIndex) {
     const mx = (ptA.x + ptB.x) / 2;
     const my = (ptA.y + ptB.y) / 2;
-    const offset = 25 + (wireIndex % 3) * 8;
+    const offset = 22 + (wireIndex % 3) * 6;
     // 옆으로 둥글게 우회하는 곡선
     const cx1 = ptA.x + (ptA.x < ptB.x ? -offset : offset);
     const cy1 = ptA.y;
@@ -118,16 +126,19 @@ export class CableRouter {
   }
 
   /**
-   * 물리적 늘어짐 현수선(Catenary) 곡선
+   * 물리적 늘어짐 현수선(Catenary) 곡선 (바닥 잘림 방지 클램핑)
    */
-  generateCatenaryPath(ptA, ptB, wireIndex) {
+  generateCatenaryPath(ptA, ptB, wireIndex, rackBounds) {
     const dx = ptB.x - ptA.x;
     const dy = ptB.y - ptA.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
-    const sag = Math.max(30, dist * 0.22) + (wireIndex % 4) * 6;
+    let sag = Math.max(25, dist * 0.20) + (wireIndex % 4) * 5;
 
-    const mx = (ptA.x + ptB.x) / 2;
-    const my = Math.max(ptA.y, ptB.y) + sag;
+    const canvasH = (rackBounds && rackBounds.canvasHeight) ? rackBounds.canvasHeight : 600;
+    const maxY = Math.max(ptA.y, ptB.y) + sag;
+    if (maxY > canvasH - 24) {
+      sag = Math.max(10, (canvasH - 24) - Math.max(ptA.y, ptB.y));
+    }
 
     const cp1x = ptA.x + dx * 0.25;
     const cp1y = ptA.y + sag * 0.8;
@@ -140,8 +151,8 @@ export class CableRouter {
   /**
    * 직각 맨해튼(Manhattan) 경로
    */
-  generateManhattanPath(ptA, ptB, wireIndex) {
-    const laneOffset = (wireIndex % 5) * 6;
+  generateManhattanPath(ptA, ptB, wireIndex, rackBounds) {
+    const laneOffset = ((wireIndex % 2 === 0 ? 1 : -1) * Math.ceil(wireIndex / 2)) * 6;
     const midY = (ptA.y + ptB.y) / 2 + laneOffset;
     return `M ${ptA.x} ${ptA.y} L ${ptA.x} ${midY} L ${ptB.x} ${midY} L ${ptB.x} ${ptB.y}`;
   }
