@@ -633,6 +633,13 @@ class SimulatorApp {
 
     const beltCheck = document.getElementById('check_belt_installed');
     if (beltCheck) beltCheck.checked = this.assembler.state.beltInstalled;
+
+    // 구동 모터 없는 실습일 때 수동 회전 카드 표시
+    const spinCard = document.getElementById('manual_spin_card');
+    if (spinCard) {
+      const hasDriveMotor = exp.modules.includes('IEG-6030-11');
+      spinCard.style.display = hasDriveMotor ? 'none' : 'block';
+    }
   }
 
   setupSidebarControls() {
@@ -663,6 +670,56 @@ class SimulatorApp {
     if (dockGotoBtn) {
       dockGotoBtn.addEventListener('click', () => {
         this.openManualForCurrentLab();
+      });
+    }
+
+    // 사이드바 수동 회전 컨트롤
+    const spinCw = document.getElementById('btn_manual_spin_cw');
+    const spinCcw = document.getElementById('btn_manual_spin_ccw');
+    const contSpin = document.getElementById('btn_continuous_spin');
+    const contStop = document.getElementById('btn_continuous_stop');
+    const addDrive = document.getElementById('btn_add_drive_unit');
+
+    if (spinCw) {
+      spinCw.addEventListener('click', () => {
+        this.engine.state.continuousSpin = false;
+        this.engine.state.manualRpm = 300;
+        this.engine.state.manualDir = 'CW';
+        this.engine.solve();
+      });
+    }
+    if (spinCcw) {
+      spinCcw.addEventListener('click', () => {
+        this.engine.state.continuousSpin = false;
+        this.engine.state.manualRpm = 300;
+        this.engine.state.manualDir = 'CCW';
+        this.engine.solve();
+      });
+    }
+    if (contSpin) {
+      contSpin.addEventListener('click', () => {
+        this.engine.state.continuousSpin = true;
+        this.engine.state.manualRpm = 150;
+        this.engine.state.manualDir = 'CW';
+        contSpin.textContent = '⏩ 회전 중...';
+        contSpin.style.background = '#059669';
+        this.engine.solve();
+      });
+    }
+    if (contStop) {
+      contStop.addEventListener('click', () => {
+        this.engine.state.continuousSpin = false;
+        this.engine.state.manualRpm = 0;
+        if (contSpin) {
+          contSpin.textContent = '▶ 연속 회전';
+          contSpin.style.background = '#16a34a';
+        }
+        this.engine.solve();
+      });
+    }
+    if (addDrive) {
+      addDrive.addEventListener('click', () => {
+        this.addDriveMotorToCurrentExp();
       });
     }
   }

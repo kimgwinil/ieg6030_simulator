@@ -226,9 +226,23 @@
                   </tr>
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
-        </div>
+
+          <div class="guide-card" id="manual_spin_card" style="display:none; background:#0c1627; border-color:#38bdf8;">
+            <h4>⚡ 회전자 구동</h4>
+            <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:4px;">
+              <button type="button" id="btn_manual_spin_cw" class="btn btn-sm" style="background:#2563eb; color:#fff; font-weight:700; font-size:11px; padding:4px 8px;">↷ CW 수동</button>
+              <button type="button" id="btn_manual_spin_ccw" class="btn btn-sm" style="background:#0891b2; color:#fff; font-weight:700; font-size:11px; padding:4px 8px;">↶ CCW 수동</button>
+              <button type="button" id="btn_continuous_spin" class="btn btn-sm" style="background:#16a34a; color:#fff; font-weight:700; font-size:11px; padding:4px 8px;">▶ 연속 회전</button>
+              <button type="button" id="btn_continuous_stop" class="btn btn-sm" style="background:#dc2626; color:#fff; font-weight:700; font-size:11px; padding:4px 8px;">■ 정지</button>
+            </div>
+            <div style="margin-top:6px; border-top:1px solid #334155; padding-top:4px;">
+              <button type="button" id="btn_add_drive_unit" class="btn btn-sm" style="width:100%; background:#7c3aed; color:#fff; font-weight:700; font-size:11px; padding:4px 8px;">⚡ + 구동 전동기(IEG-6030-11) 추가</button>
+            </div>
+            <p style="font-size:10px; color:#64748b; margin-top:4px;">수동: 한번 클릭 시 300RPM 감속. 연속: 150RPM 유지.</p>
+          </div>
       </div>
 
       <!-- 우측 가상 오실로스코프 및 실시간 계측 모니터 도크 -->

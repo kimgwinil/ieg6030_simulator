@@ -175,22 +175,6 @@ export class ModuleRenderer {
     // 10번 계철 프레임인 경우 기계 조립 SVG 레이어 추가 (고정 viewBox 776x697로 100% 정밀 정렬)
     let assemblyHtml = '';
     if (def.id === 'IEG-6030-10') {
-      const hasDriveMotor = this.engine.modules.has('IEG-6030-11');
-      const manualToolbar = !hasDriveMotor ? `
-        <div class="manual-spin-toolbar" style="position:absolute; left:50%; bottom:6%; transform:translateX(-50%); display:flex; flex-direction:column; gap:3px; z-index:15; background:rgba(15,23,42,0.95); padding:5px 8px; border-radius:5px; border:1px solid #38bdf8; box-shadow:0 4px 12px rgba(0,0,0,0.6); pointer-events:auto;">
-          <div style="display:flex; align-items:center; gap:3px; flex-wrap:wrap;">
-            <span style="font-size:9px; color:#94a3b8; font-weight:700;">🖐 수동</span>
-            <button type="button" id="btn_manual_spin_cw" style="font-size:9px; font-weight:700; cursor:pointer; background:#2563eb; color:#fff; border:none; border-radius:3px; padding:2px 5px;">↷ CW</button>
-            <button type="button" id="btn_manual_spin_ccw" style="font-size:9px; font-weight:700; cursor:pointer; background:#0891b2; color:#fff; border:none; border-radius:3px; padding:2px 5px;">↶ CCW</button>
-            <span style="font-size:9px; color:#94a3b8; font-weight:700; margin-left:2px;">🔄</span>
-            <button type="button" id="btn_continuous_spin" style="font-size:9px; font-weight:700; cursor:pointer; background:#16a34a; color:#fff; border:none; border-radius:3px; padding:2px 5px;" data-active="false">▶ 연속</button>
-            <button type="button" id="btn_continuous_stop" style="font-size:9px; font-weight:700; cursor:pointer; background:#dc2626; color:#fff; border:none; border-radius:3px; padding:2px 5px;">■ 정지</button>
-          </div>
-          <div style="border-top:1px solid #334155; padding-top:2px; display:flex; align-items:center; gap:3px;">
-            <button type="button" id="btn_add_drive_unit" style="font-size:9px; font-weight:700; cursor:pointer; background:#7c3aed; color:#fff; border:none; border-radius:3px; padding:2px 5px;">⚡ + 구동 유닛(11) 추가</button>
-          </div>
-        </div>
-      ` : '';
       assemblyHtml = `
         <div class="field-frame-assembly-layer" id="field_frame_assembly">
           <svg class="assembly-svg" viewBox="0 0 776 697" preserveAspectRatio="none" style="position:absolute; inset:0; width:100%; height:100%;">
@@ -204,7 +188,6 @@ export class ModuleRenderer {
             <g id="assembly_svg_content"></g>
           </svg>
         </div>
-        ${manualToolbar}
       `;
     } else if (def.id === 'IEG-6030-11') {
       assemblyHtml = `
@@ -338,64 +321,6 @@ export class ModuleRenderer {
         }
       }
 
-      // 4-1. 계철 프레임 회전자 수동 회전 버튼
-      const spinCwBtn = e.target.closest('#btn_manual_spin_cw');
-      if (spinCwBtn) {
-        this.engine.state.continuousSpin = false;
-        this.engine.state.manualRpm = 300;
-        this.engine.state.manualDir = 'CW';
-        this.engine.solve();
-        return;
-      }
-      const spinCcwBtn = e.target.closest('#btn_manual_spin_ccw');
-      if (spinCcwBtn) {
-        this.engine.state.continuousSpin = false;
-        this.engine.state.manualRpm = 300;
-        this.engine.state.manualDir = 'CCW';
-        this.engine.solve();
-        return;
-      }
-
-      // 4-2. 연속 회전 시작
-      const contSpinBtn = e.target.closest('#btn_continuous_spin');
-      if (contSpinBtn) {
-        this.engine.state.continuousSpin = true;
-        this.engine.state.manualRpm = 150;
-        this.engine.state.manualDir = 'CW';
-        contSpinBtn.textContent = '⏩ 회전 중...';
-        contSpinBtn.style.background = '#059669';
-        this.engine.solve();
-        return;
-      }
-
-      // 4-3. 연속 회전 정지
-      const contStopBtn = e.target.closest('#btn_continuous_stop');
-      if (contStopBtn) {
-        this.engine.state.continuousSpin = false;
-        this.engine.state.manualRpm = 0;
-        const startBtn = document.getElementById('btn_continuous_spin');
-        if (startBtn) {
-          startBtn.textContent = '▶ 시작 (150 RPM)';
-          startBtn.style.background = '#16a34a';
-        }
-        this.engine.solve();
-        return;
-      }
-
-      // 4-4. 자동 구동 유닛(11) 추가
-      const addDriveBtn = e.target.closest('#btn_add_drive_unit');
-      if (addDriveBtn) {
-        // 현재 실험에 IEG-6030-11 추가 후 재로드
-        if (window.app) {
-          const exp = window.app.currentExpId;
-          const expData = window.app.engine.constructor.name; // trigger re-render
-          // 직접 modules 배열에 11번 추가
-          const expList = window.EXPERIMENTS_DATA || [];
-          // app 레벨에서 처리
-          window.app.addDriveMotorToCurrentExp();
-        }
-        return;
-      }
     });
 
     // 5. 노브 마우스 원형 회전 드래그 & 마우스 휠
