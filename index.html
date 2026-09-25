@@ -4,10 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>IEG-6030 전기기계 구조 실습 시뮬레이터</title>
+  <!-- 앱 설치(PWA) -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#0f172a">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/app/icon-192.png">
+  <link rel="apple-touch-icon" href="assets/app/icon-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="IEG-6030">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <!-- 스타일시트 로드 -->
-  <link rel="stylesheet" href="css/main.css?v=11">
-  <link rel="stylesheet" href="css/workbench.css?v=11">
-  <link rel="stylesheet" href="css/curriculum.css?v=11">
+  <link rel="stylesheet" href="css/main.css?v=12">
+  <link rel="stylesheet" href="css/workbench.css?v=12">
+  <link rel="stylesheet" href="css/curriculum.css?v=12">
 </head>
 <body>
 
@@ -36,6 +45,7 @@
     </nav>
 
     <div class="header-actions">
+      <button id="btn_install_app" class="btn btn-sm" style="display:none; background:#16a34a; border-color:#16a34a;" title="이 시뮬레이터를 컴퓨터/태블릿에 앱으로 설치합니다">📲 앱 설치</button>
       <button class="btn btn-sm" onclick="alert('IEG-6030 전기기계 구조 실습장비 통합 시뮬레이터\n\n· 회로망 해석(절점해석) 기반: 결선한 대로 전압·전류가 계산됩니다.\n· 디지털 메터는 선택한 레인지 단자 기준 실제값을 표시하며, 레인지 초과 시 OL을 표시합니다.\n· 발전기 특성은 1800rpm 기준, 2극 기기(f = n/60)로 모델링되어 있습니다.')">ℹ️ 시스템 안내</button>
     </div>
   </header>
@@ -397,6 +407,26 @@
   </main>
 
   <!-- 애플리케이션 모듈 진입 스크립트 -->
-  <script type="module" src="js/app.js?v=11"></script>
+  <script type="module" src="js/app.js?v=12"></script>
+  <script>
+    // 앱 설치(PWA): 서비스 워커 등록 + 설치 버튼
+    if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+      window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+    }
+    let deferredInstall = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredInstall = e;
+      const b = document.getElementById('btn_install_app');
+      if (b) b.style.display = 'inline-block';
+    });
+    document.addEventListener('click', async (e) => {
+      if (e.target.id !== 'btn_install_app' || !deferredInstall) return;
+      deferredInstall.prompt();
+      await deferredInstall.userChoice;
+      deferredInstall = null;
+      e.target.style.display = 'none';
+    });
+  </script>
 </body>
 </html>
