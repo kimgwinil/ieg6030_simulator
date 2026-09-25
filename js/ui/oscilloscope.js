@@ -112,39 +112,36 @@ export class VirtualOscilloscope {
     this.settings.yOffset = 0;
   }
 
+  /** 현재 신호의 순시값 v(t) 계산 (트리거: CH1 상승 영점) */
+  signalAt(sd, t, k = 0) {
+    const tr = sd.traces[k] || sd.traces[0];
+    if (!tr) return 0;
+    const w = 2 * Math.PI * (sd.freq || 0);
+    switch (sd.type) {
+      case 'sine':
+      case 'sine3': return tr.amp * Math.sin(w * t + (tr.phase - (sd.traces[0]?.phase || 0)));
+      case 'rectified': return tr.amp * Math.abs(Math.sin(w * t));
+      case 'dc': return tr.amp;
+      default: return 0;
+    }
+  }
+
   /**
-   * 측정 신호 크기 및 주파수에 맞추어 최적의 VOLT/DIV 및 TIME/DIV 자동 설정
+   * 측정 신호 크기·주파수에 맞춰 VOLT/DIV, TIME/DIV 자동 설정
    */
   autoScale() {
-    const scopeData = this.engine.state.scopeData;
-    const vpp = parseFloat(scopeData.vpp) || (this.engine.state.calculatedValues?.genTermVolt || 0) * 2;
-    const amp = vpp / 2;
-    const freq = scopeData.freq || (Math.abs(this.engine.state.rotorRpm || 0) / 60) || 30;
-
-    // 수직축: 파형의 피크가 화면의 2.5~3 DIV에 오도록 최적 VOLT/DIV 선택
+    const sd = this.engine.state.scopeData || {};
+    const peak = Math.max(0, ...((sd.traces || []).map(t => Math.abs(t.amp))));
     let bestVolt = 50;
-    for (const v of [1, 2, 5, 10, 20, 50]) {
-      if ((amp / v) <= 3.2) {
-        bestVolt = v;
-        break;
-      }
-    }
+    for (const v of this.voltDivOptions) { if (peak / v <= 3.2) { bestVolt = v; break; } }
     this.setVoltDiv(bestVolt);
-
-    // 수평축: 10개 DIV 화면에 1.5 ~ 3개의 완전한 주기가 보이도록 최적 TIME/DIV 선택
-    if (freq > 0.5) {
-      const periodMs = 1000 / freq;
-      const targetTimeDiv = (periodMs * 2.2) / 10;
+    if (sd.freq > 0.5) {
+      const periodMs = 1000 / sd.freq;
+      const target = (periodMs * 2.5) / 10;   // 화면에 약 2.5주기
       let bestTime = 50;
-      for (const t of [1, 2, 5, 10, 20, 50]) {
-        if (t >= targetTimeDiv * 0.8) {
-          bestTime = t;
-          break;
-        }
-      }
+      for (const t of this.timeDivOptions) { if (t >= target * 0.8) { bestTime = t; break; } }
       this.setTimeDiv(bestTime);
     }
-
     this.resetY();
   }
 
@@ -152,7 +149,7 @@ export class VirtualOscilloscope {
     this.settings.running = !this.settings.running;
     const btn = document.getElementById('btn_scope_run');
     if (btn) {
-      btn.textContent = this.settings.running ? 'Run/Stop' : 'PAUSED';
+      btn.textContent = this.settings.running ? 'Run/Stop' : 'STOPPED';
       btn.classList.toggle('paused', !this.settings.running);
     }
     return this.settings.running;
@@ -162,95 +159,80 @@ export class VirtualOscilloscope {
     const ctx = this.ctx;
     const w = this.width;
     const h = this.height;
+    if (this.settings.running) this.frozen = JSON.parse(JSON.stringify(this.engine.state.scopeData || {}));
+    const sd = this.frozen || { type: 'none', traces: [] };
 
-    // 1. 화면 클리어 (어두운 CRT 오실로스코프 화면)
     ctx.fillStyle = '#070d14';
     ctx.fillRect(0, 0, w, h);
 
-    // 2. 그리드 (격자선: 10 horizontal x 8 vertical divisions)
-    const numDivX = 10;
-    const numDivY = 8;
-    const xStep = w / numDivX;
-    const yStep = h / numDivY;
-
+    // 격자 10 × 8 DIV
+    const numDivX = 10, numDivY = 8;
+    const xStep = w / numDivX, yStep = h / numDivY;
     ctx.strokeStyle = '#142230';
     ctx.lineWidth = 1;
-
-    for (let x = 0; x <= w + 1; x += xStep) {
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, h);
-      ctx.stroke();
-    }
-    for (let y = 0; y <= h + 1; y += yStep) {
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(w, y);
-      ctx.stroke();
-    }
-
-    // 중앙 크로스헤어 눈금
+    for (let i = 0; i <= numDivX; i++) { ctx.beginPath(); ctx.moveTo(i * xStep, 0); ctx.lineTo(i * xStep, h); ctx.stroke(); }
+    for (let i = 0; i <= numDivY; i++) { ctx.beginPath(); ctx.moveTo(0, i * yStep); ctx.lineTo(w, i * yStep); ctx.stroke(); }
     ctx.strokeStyle = '#233d54';
     ctx.setLineDash([2, 3]);
-    ctx.beginPath();
-    ctx.moveTo(w / 2, 0); ctx.lineTo(w / 2, h);
-    ctx.moveTo(0, h / 2); ctx.lineTo(w, h / 2);
-    ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(w / 2, 0); ctx.lineTo(w / 2, h); ctx.moveTo(0, h / 2); ctx.lineTo(w, h / 2); ctx.stroke();
     ctx.setLineDash([]);
 
-    // 3. 실시간 파형 생성 및 렌더링
-    const scopeData = this.engine.state.scopeData;
-    const freq = scopeData.freq || 0;
-    const vpp = parseFloat(scopeData.vpp) || 0;
-    const amplitude = vpp / 2;
-
     const midY = h / 2;
-    const pixelsPerVolt = yStep / this.settings.voltDiv;
-    const totalTimeSec = (numDivX * this.settings.timeDiv) / 1000;
+    const pxPerV = yStep / this.settings.voltDiv;
+    const totalT = (numDivX * this.settings.timeDiv) / 1000;
+    const colors = ['#00f5d4', '#facc15', '#f472b6'];
+    const nTr = sd.type === 'sine3' ? 3 : (sd.type === 'none' ? 1 : 1);
 
-    if (this.settings.running && freq > 0) {
-      this.settings.phase += 0.08;
-      if (this.settings.phase > 2 * Math.PI) this.settings.phase -= 2 * Math.PI;
-    }
-
-    ctx.strokeStyle = '#00f5d4';
-    ctx.lineWidth = 2.2;
-    ctx.shadowColor = '#00f5d4';
-    ctx.shadowBlur = 6;
-
-    ctx.beginPath();
-    const numPoints = Math.round(w);
-    for (let i = 0; i <= numPoints; i++) {
-      const x = (i / numPoints) * w;
-      let volt = 0;
-      if (freq > 0.1 && amplitude > 0.05) {
-        const t = (x / w) * totalTimeSec;
-        volt = Math.sin(2 * Math.PI * freq * t + this.settings.phase) * amplitude;
-      } else if (amplitude > 0.05) {
-        // 직류 전압일 경우 직선 표시
-        volt = amplitude;
+    for (let k = 0; k < nTr; k++) {
+      ctx.strokeStyle = colors[k];
+      ctx.lineWidth = 2;
+      ctx.shadowColor = colors[k];
+      ctx.shadowBlur = 5;
+      ctx.beginPath();
+      const N = Math.round(w);
+      for (let i = 0; i <= N; i++) {
+        const x = (i / N) * w;
+        const v = this.signalAt(sd, (x / w) * totalT, k);
+        const y = Math.max(-2, Math.min(h + 2, midY - (v + this.settings.yOffset) * pxPerV));
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
       }
-
-      const y = midY - (volt + this.settings.yOffset) * pixelsPerVolt;
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
+      ctx.stroke();
     }
-    ctx.stroke();
     ctx.shadowBlur = 0;
 
-    // 4. 정보 OSD 텍스트 오버레이
+    // OSD (상단: 감도·시간축·상태 / 하단: 측정값) — 글자 겹침 방지 위해 폭에 맞춰 배치
+    const font = Math.max(9, Math.min(11, w / 32));
+    ctx.font = `${font}px monospace`;
+    ctx.textBaseline = 'top';
     ctx.fillStyle = '#f1faee';
-    ctx.font = '10.5px monospace';
-    ctx.fillText(`CH1: ${this.settings.voltDiv}V/DIV`, 8, 16);
-    ctx.fillText(`TIME: ${this.settings.timeDiv}ms/DIV`, w / 2 - 45, 16);
-
+    ctx.textAlign = 'left';
+    ctx.fillText(`CH1 ${this.settings.voltDiv}V/div`, 6, 5);
+    ctx.textAlign = 'center';
+    ctx.fillText(`${this.settings.timeDiv}ms/div`, w / 2, 5);
+    ctx.textAlign = 'right';
     ctx.fillStyle = this.settings.running ? '#22c55e' : '#ef4444';
-    ctx.fillText(this.settings.running ? '▶ RUN' : '❚❚ STOP', w - 54, 16);
+    ctx.fillText(this.settings.running ? 'RUN' : 'STOP', w - 6, 5);
 
+    ctx.textBaseline = 'bottom';
     ctx.fillStyle = '#00f5d4';
-    ctx.fillText(`FREQ: ${freq.toFixed(1)} Hz`, 8, h - 8);
-    const vrms = (amplitude * 0.707).toFixed(1);
-    ctx.fillText(`Vpp: ${vpp.toFixed(1)}V (Vrms: ${vrms}V)`, w - 165, h - 8);
+    const f = sd.freq || 0;
+    const peak = Math.abs((sd.traces || [])[0]?.amp || 0);
+    let meas;
+    if (sd.type === 'dc') meas = `DC ${peak.toFixed(2)}V`;
+    else if (sd.type === 'rectified') meas = `Vp ${peak.toFixed(1)}V · 평균 ${(peak * 2 / Math.PI).toFixed(1)}V`;
+    else if (sd.type === 'none') meas = '신호 없음';
+    else meas = `Vpp ${(peak * 2).toFixed(1)}V · ${(peak / Math.SQRT2).toFixed(1)}Vrms`;
+    ctx.textAlign = 'left';
+    ctx.fillText(`f ${f.toFixed(1)}Hz`, 6, h - 4);
+    ctx.textAlign = 'right';
+    ctx.fillText(meas, w - 6, h - 4);
+    if (sd.label) {
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#94a3b8';
+      ctx.textBaseline = 'top';
+      ctx.fillText(sd.type === 'sine3' ? 'A/B/C-N' : sd.label, 6, 5 + font + 3);
+    }
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
   }
 }
-

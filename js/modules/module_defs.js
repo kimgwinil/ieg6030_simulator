@@ -210,6 +210,7 @@ export const MODULE_DEFS = {
       {
         id: 'M_AC_VOLT',
         type: 'digital_panel',
+        short: 'AC V',
         label: 'AC VOLT',
         unit: 'V',
         x: 41.2,
@@ -224,6 +225,7 @@ export const MODULE_DEFS = {
       {
         id: 'M_DC_VOLT',
         type: 'digital_panel',
+        short: 'DC V',
         label: 'DC VOLT',
         unit: 'V',
         x: 69.9,
@@ -273,6 +275,7 @@ export const MODULE_DEFS = {
       {
         id: 'M_AC_V',
         type: 'digital_panel',
+        short: 'AC V',
         label: 'AC VOLTMETER',
         unit: 'V',
         x: 20.0,
@@ -287,6 +290,7 @@ export const MODULE_DEFS = {
       {
         id: 'M_AC_A',
         type: 'digital_panel',
+        short: 'AC A',
         label: 'AC AMMETER',
         unit: 'A',
         x: 20.0,
@@ -326,6 +330,7 @@ export const MODULE_DEFS = {
       {
         id: 'M_DC_V',
         type: 'digital_panel',
+        short: 'DC V',
         label: 'DC VOLTMETER',
         unit: 'V',
         x: 20.0,
@@ -340,6 +345,7 @@ export const MODULE_DEFS = {
       {
         id: 'M_DC_A',
         type: 'digital_panel',
+        short: 'DC A',
         label: 'DC AMMETER',
         unit: 'A',
         x: 20.0,
@@ -372,6 +378,7 @@ export const MODULE_DEFS = {
       {
         id: 'M_GALVANO',
         type: 'digital_panel',
+        short: 'DC mA',
         label: 'DC MILLIAMMETER',
         unit: 'mA',
         x: 20.0,

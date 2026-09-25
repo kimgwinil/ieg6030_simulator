@@ -41,45 +41,34 @@ export class MachineAssembler {
     this.engine.assembly.beltConnected = this.state.beltInstalled;
     this.engine.assembly.poles = { ...this.state.poles };
     this.engine.solve();
+    // 벨트 표시 갱신
+    if (window.app && window.app.cableUI) window.app.cableUI.render();
     if (this.onAssemblyChange) {
       this.onAssemblyChange(this.state);
     }
   }
 
   /**
-   * 60FPS 고속 회전 업데이트 (DOM 직접 변형으로 렉 없는 부드러운 애니메이션)
+   * 60FPS 회전 애니메이션 (회전각은 회로 엔진이 적분한 실제 값 사용 → 검류계 순시값과 동기)
+   * @param {number} dt 경과 시간 [s]
+   * @param {number} rotorAngleDeg 회전자 기계각 [deg]
+   * @param {number} motorRpm 구동 전동기 회전수 (부호 = 방향)
    */
-  updateAnimation(dt, rotorRpm = 0, motorRpm = 0, isCcw = false) {
-    const effectiveMotorRpm = (motorRpm !== 0) ? motorRpm : rotorRpm;
-    const dir = isCcw ? -1 : 1;
+  updateAnimation(dt, rotorAngleDeg = 0, motorRpm = 0) {
+    this.state.rotorAngle = rotorAngleDeg;
+    const rotorGroup = document.getElementById('animated_rotor_body');
+    if (rotorGroup) rotorGroup.setAttribute('transform', `rotate(${rotorAngleDeg.toFixed(2)})`);
 
-    // 1. 계철 프레임 로터 회전 (발전기 또는 전동기 회전자)
-    if (Math.abs(rotorRpm) > 1) {
-      const degPerSec = (Math.abs(rotorRpm) / 60) * 360 * dir;
-      this.state.rotorAngle = (this.state.rotorAngle + degPerSec * dt) % 360;
-      const rotorGroup = document.getElementById('animated_rotor_body');
-      if (rotorGroup) {
-        rotorGroup.setAttribute('transform', `rotate(${this.state.rotorAngle.toFixed(2)})`);
-      }
-    }
-
-    // 2. 11번 구동 모터 풀리 회전 및 벨트 이동
-    if (Math.abs(effectiveMotorRpm) > 1) {
-      const pulleyDeg = (Math.abs(effectiveMotorRpm) / 60) * 360 * dir;
+    if (Math.abs(motorRpm) > 0.5) {
+      const pulleyDeg = (motorRpm / 60) * 360;
       this.state.pulleyAngle = ((this.state.pulleyAngle || 0) + pulleyDeg * dt) % 360;
       const pulleyMarker = document.getElementById('motor_pulley_spokes');
-      if (pulleyMarker) {
-        pulleyMarker.setAttribute('transform', `rotate(${this.state.pulleyAngle.toFixed(2)})`);
-      }
-
-      // 3. 구동 벨트 대시 이동
+      if (pulleyMarker) pulleyMarker.setAttribute('transform', `rotate(${this.state.pulleyAngle.toFixed(2)})`);
       if (this.state.beltInstalled) {
-        const beltSpeedPx = (Math.abs(effectiveMotorRpm) / 60) * 120 * dir;
+        const beltSpeedPx = (motorRpm / 60) * 120;
         this.state.beltOffset = (this.state.beltOffset - beltSpeedPx * dt) % 1000;
         const beltDash = document.getElementById('animated_drive_belt_texture');
-        if (beltDash) {
-          beltDash.setAttribute('stroke-dashoffset', this.state.beltOffset.toFixed(1));
-        }
+        if (beltDash) beltDash.setAttribute('stroke-dashoffset', this.state.beltOffset.toFixed(1));
       }
     }
   }

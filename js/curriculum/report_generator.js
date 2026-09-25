@@ -1,3 +1,5 @@
+import { occDc, MACHINE } from '../engine/machine_models.js';
+
 /**
  * IEG-6030 실습 피드백 및 종합 실험 보고서(Report) 생성기
  * 데이터 테이블, 무부하 포화곡선 / 외부특성곡선 그래프 렌더링, 인쇄 지원
@@ -12,12 +14,13 @@ export class ReportGenerator {
 
   recordCurrentPoint(labName = '') {
     const calc = this.engine.state.calculatedValues || {};
-    const rpm = Math.round(calc.generatorRpm || this.engine.state.autoDriverRpm || 0);
-    const vTerm = (calc.genTermVolt || 0).toFixed(1);
-    const iLoad = (calc.genLoadCurr || 0).toFixed(2);
+    const rpm = Math.round(Math.abs(calc.rotorRpm || 0));
+    const vTerm = (calc.genTermVolt || 0).toFixed(2);
+    const iLoad = (calc.genLoadCurr || 0).toFixed(3);
     const iField = ((calc.iField || 0) * 1000).toFixed(1); // mA
-    const galv = (calc.galvanoVal || 0).toFixed(2); // mA
-    const freq = (calc.frequency || (rpm > 0 ? (rpm / 60) : 0)).toFixed(1);
+    const g = this.engine.readings.M_GALVANO;
+    const galv = (g && g.active ? g.display : 0).toFixed(2); // mA
+    const freq = (calc.frequency || 0).toFixed(1);
 
     // 운전 상태 및 동작 판정
     let status = '정상 운전';
@@ -28,10 +31,10 @@ export class ReportGenerator {
     } else if (rpm === 0 && Math.abs(parseFloat(galv)) > 0.05) {
       status = '수동 유도 기전력 검출';
       statusClass = 'normal';
-    } else if (rpm > 0 && parseFloat(vTerm) >= 1.0) {
+    } else if (rpm > 0 && Math.abs(parseFloat(vTerm)) >= 1.0) {
       status = parseFloat(iLoad) > 0.05 ? '부하 운전 발전' : '무부하 정격 발전';
       statusClass = 'normal';
-    } else if (rpm > 0 && parseFloat(vTerm) < 1.0) {
+    } else if (rpm > 0 && Math.abs(parseFloat(vTerm)) < 1.0) {
       status = '미여자/무기전력 회전';
       statusClass = 'warn';
     } else if (rpm === 0) {
@@ -129,13 +132,14 @@ export class ReportGenerator {
       const xRatio = xPx / plotW;
       let yVal = 0;
       if (type === 'SATURATION') {
-        // 포화 곡선
+        // 엔진과 동일한 무부하 포화곡선 E = Er + Ea·tanh(If/I0) @1800rpm
         const ifVal = xRatio * 500;
-        yVal = 48.0 * (ifVal / (120 + ifVal));
+        yVal = occDc(ifVal / 1000);
       } else {
-        // 외부 특성곡선 (우하향)
+        // 타여자 발전기 외부특성 V = E0 − IL·(Ra + Rar) (무부하 전압 = 첫 기록점 또는 40V)
         const ilVal = xRatio * 2.5;
-        yVal = Math.max(0, 42.0 - ilVal * 5.5);
+        const e0 = this.recordedData.length ? Math.max(...this.recordedData.map(d => Math.abs(parseFloat(d.vTerm)))) : 40;
+        yVal = Math.max(0, e0 - ilVal * (MACHINE.armatureR + MACHINE.armatureReactionR));
       }
       const yRatio = yVal / 60.0;
       const yPx = padT + plotH - yRatio * plotH;
@@ -156,7 +160,7 @@ export class ReportGenerator {
         const xVal = type === 'SATURATION' ? parseFloat(d.iField) : parseFloat(d.iLoad);
         const xMax = type === 'SATURATION' ? 500 : 2.5;
         const xRatio = Math.min(1.0, Math.max(0, xVal / xMax));
-        const yRatio = Math.min(1.0, Math.max(0, parseFloat(d.vTerm) / 60.0));
+        const yRatio = Math.min(1.0, Math.max(0, Math.abs(parseFloat(d.vTerm)) / 60.0));
 
         const px = padL + xRatio * plotW;
         const py = padT + plotH - yRatio * plotH;
@@ -171,7 +175,7 @@ export class ReportGenerator {
         const xVal = type === 'SATURATION' ? parseFloat(d.iField) : parseFloat(d.iLoad);
         const xMax = type === 'SATURATION' ? 500 : 2.5;
         const xRatio = Math.min(1.0, Math.max(0, xVal / xMax));
-        const yRatio = Math.min(1.0, Math.max(0, parseFloat(d.vTerm) / 60.0));
+        const yRatio = Math.min(1.0, Math.max(0, Math.abs(parseFloat(d.vTerm)) / 60.0));
 
         const px = padL + xRatio * plotW;
         const py = padT + plotH - yRatio * plotH;
@@ -223,9 +227,9 @@ export class ReportGenerator {
         <div class="report-header">
           <h2>전기기계 구조 실습장비 (IEG-6030) 실습 보고서</h2>
           <div class="report-meta">
-            <span><strong>실습 번호:</strong> ${evalResult ? evalResult.expId : 'EXP-04'}</span>
+            <span><strong>실습 번호:</strong> ${evalResult ? evalResult.expId : '-'}</span>
             <span><strong>일시:</strong> ${new Date().toLocaleString()}</span>
-            <span><strong>종합 점수:</strong> <span class="score-highlight">${evalResult ? evalResult.totalScore : 90}점 / 100점</span></span>
+            <span><strong>종합 점수:</strong> <span class="score-highlight">${evalResult ? evalResult.totalScore : 0}점 / 100점</span></span>
           </div>
         </div>
 
@@ -249,7 +253,7 @@ export class ReportGenerator {
               <button class="btn btn-sm" style="background:#0284c7; color:#fff; border-color:#0284c7;" onclick="window.app.reportGen.exportToPdf()">
                 📄 PDF 저장/인쇄
               </button>
-              <button class="btn btn-sm btn-danger" onclick="if(confirm('기록된 측정 데이터를 초기화하시겠습니까?')){ window.app.reportGen.clearData(); window.app.renderFeedbackView(); window.app.updateRecordCountBadge(); }">
+              <button class="btn btn-sm btn-danger" onclick="if(confirm('기록된 측정 데이터를 초기화하시겠습니까?')){ window.app.reportGen.clearData(); window.app.renderFeedbackView(); window.app.renderLiveMeasurementTable(); }">
                 🗑️ 초기화
               </button>
             </div>
@@ -275,7 +279,7 @@ export class ReportGenerator {
           <h3>3. 특성 곡선 그래프 분석</h3>
           <div class="report-graph-wrap">
             <canvas id="report_graph_canvas"></canvas>
-            <p class="graph-caption">※ 점선: 매뉴얼 기준 이론 포화 곡선, 실선 및 포인트: 사용자 실습 계측 곡선</p>
+            <p class="graph-caption">※ 점선: 시뮬레이터 모델 이론 곡선 (포화곡선 E = 1.8 + 50·tanh(If/0.28) @1800rpm / 외부특성 V = E0 − IL·4.5Ω), 실선 및 포인트: 사용자 계측 기록</p>
           </div>
         </div>
 

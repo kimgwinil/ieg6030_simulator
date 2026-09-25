@@ -1,206 +1,156 @@
 /**
- * IEG-6030 지능형 케이블 자동 정렬 및 장애물 회피 라우팅 엔진
- * 장비 중요 부품(노브, 계측기, 스위치, 로터)을 통과하거나 가리지 않고
- * 전문 실험실 배선 트러프/덕트(Cable Dressing)를 따라 부드러운 곡선으로 자동 정렬
+ * IEG-6030 케이블 자동 정렬 및 장애물 회피 라우팅 엔진
+ *
+ * SMART_DUCT: 단자 → (필요 시 계측기 표시창·노브·다른 단자를 옆으로 비켜) → 상/하단 케이블 덕트 → 목적 단자
+ *   - 두 덕트 경로의 장애물 교차 수를 비교해 가리는 부품이 적은 쪽을 선택
+ *   - 전선별 차선(lane)을 달리해 덕트 안에서 겹치지 않게 적층
  */
 
 export class CableRouter {
   constructor() {
     this.routingMode = 'SMART_DUCT'; // 'SMART_DUCT' | 'CATENARY' | 'MANHATTAN'
-    this.topDuctY = 22;      // 랙 상단 배선 덕트 높이 (px)
-    this.bottomDuctY = 690;  // 랙 하단 배선 덕트 높이 (px)
-    this.laneSpacing = 8;    // 전선 겹침 방지 차선 간격 (px)
   }
 
   setRoutingMode(mode) {
     this.routingMode = mode;
   }
 
-  /**
-   * 두 단자 간의 정렬된 SVG 경로(Path d 문자열) 생성
-   * @param {Object} ptA - { x, y, moduleId, terminalId, terminalYRatio }
-   * @param {Object} ptB - { x, y, moduleId, terminalId, terminalYRatio }
-   * @param {number} wireIndex - 전선 순번 (차선 오프셋 분배용)
-   * @param {Object} rackBounds - 랙 영역 정보
-   * @param {Array} obstacles - 회피 대상 Bounding Box 목록
-   */
   generatePath(ptA, ptB, wireIndex = 0, rackBounds = null, obstacles = []) {
-    if (this.routingMode === 'CATENARY') {
-      return this.generateCatenaryPath(ptA, ptB, wireIndex, rackBounds);
-    }
+    if (this.routingMode === 'CATENARY') return this.generateCatenaryPath(ptA, ptB, wireIndex, rackBounds);
+    if (this.routingMode === 'MANHATTAN') return this.generateManhattanPath(ptA, ptB, wireIndex);
+    return this.generateSmartDuctPath(ptA, ptB, wireIndex, rackBounds, obstacles);
+  }
 
-    if (this.routingMode === 'MANHATTAN') {
-      return this.generateManhattanPath(ptA, ptB, wireIndex, rackBounds);
-    }
-
-    // 기본 모드: SMART_DUCT (장비 가림 회피 및 케이블 트러프 자동 정렬)
-    return this.generateSmartDuctPath(ptA, ptB, wireIndex, rackBounds);
+  /** 수직 선분(x, y1→y2, 폭 w)과 교차하는 장애물 목록 */
+  hitsOnVertical(x, y1, y2, obstacles, exclude, halfW = 4) {
+    const top = Math.min(y1, y2), bot = Math.max(y1, y2);
+    return obstacles.filter(o =>
+      !exclude(o) && x + halfW > o.x1 && x - halfW < o.x2 && bot > o.y1 && top < o.y2);
   }
 
   /**
-   * 스마트 덕트 라우팅:
-   * 실제 랙 상단/하단 케이블 트러프(Duct) 중심선에 맞춰 배선.
-   * 위/아래로 너무 올라가거나 내려가서 잘리는 현상을 완벽히 방지.
-   * 다중 차선(Multi-lane)을 적용하여 전선 겹침 방지.
+   * 단자에서 덕트까지의 진출 경로(경유점) 계산
+   * @returns {{ points: Array<{x,y}>, cost: number }}
    */
-  generateSmartDuctPath(ptA, ptB, wireIndex, rackBounds) {
-    const topDuctBase = (rackBounds && rackBounds.topDuct !== undefined) ? rackBounds.topDuct : 40;
-    const bottomDuctBase = (rackBounds && rackBounds.bottomDuct !== undefined) ? rackBounds.bottomDuct : 520;
-    const midY = (rackBounds && rackBounds.midY !== undefined) ? rackBounds.midY : (topDuctBase + bottomDuctBase) / 2;
-    const canvasH = (rackBounds && rackBounds.canvasHeight !== undefined) ? rackBounds.canvasHeight : 600;
+  exitRoute(pt, ductY, obstacles) {
+    const dir = ductY < pt.y ? -1 : 1;
+    const stem = 11;
+    const self = (o) => o.kind === 'terminal' && Math.abs((o.x1 + o.x2) / 2 - pt.x) < 1 && Math.abs((o.y1 + o.y2) / 2 - pt.y) < 1;
+    const startY = pt.y + dir * stem;
+    const hits = this.hitsOnVertical(pt.x, startY, ductY, obstacles, self);
+    if (hits.length === 0) {
+      return { points: [pt, { x: pt.x, y: ductY }], cost: 0 };
+    }
+    // 가장 가까운 장애물 기준으로 좌/우 비켜가기
+    const nearest = hits.reduce((a, b) => (Math.abs(((a.y1 + a.y2) / 2) - pt.y) < Math.abs(((b.y1 + b.y2) / 2) - pt.y) ? a : b));
+    const sameModule = hits.filter(o => o.moduleId === nearest.moduleId && o.kind !== 'terminal');
+    const blockX1 = Math.min(nearest.x1, ...sameModule.map(o => o.x1));
+    const blockX2 = Math.max(nearest.x2, ...sameModule.map(o => o.x2));
+    const margin = 7;
+    const cands = [blockX2 + margin, blockX1 - margin].map(jx => {
+      const rest = this.hitsOnVertical(jx, startY, ductY, obstacles, self);
+      // 비켜가는 수평 구간이 다른 단자 중심을 지나지 않는지
+      const horiz = obstacles.filter(o => o.kind === 'terminal' && !self(o) &&
+        startY > o.y1 && startY < o.y2 && Math.max(pt.x, jx) > o.x1 && Math.min(pt.x, jx) < o.x2);
+      return { jx, cost: rest.length * 3 + horiz.length * 2 + Math.abs(jx - pt.x) / 200 };
+    });
+    cands.sort((a, b) => a.cost - b.cost);
+    const best = cands[0];
+    return {
+      points: [pt, { x: pt.x, y: startY }, { x: best.jx, y: startY }, { x: best.jx, y: ductY }],
+      cost: best.cost + 0.5
+    };
+  }
 
-    // 만약 동일 모듈 내 바로 인접한 단자라면 덕트까지 가지 않고 단축 루프 경로 생성
+  generateSmartDuctPath(ptA, ptB, wireIndex, rackBounds, obstacles = []) {
+    const topBase = rackBounds?.topDuct ?? 40;
+    const botBase = rackBounds?.bottomDuct ?? 520;
+    const canvasH = rackBounds?.canvasHeight ?? 600;
+
+    // 같은 모듈 내 가까운 단자: 점퍼선 형태의 짧은 곡선
     const dx = Math.abs(ptA.x - ptB.x);
     const dy = Math.abs(ptA.y - ptB.y);
-    if (ptA.moduleId === ptB.moduleId && dx < 110 && dy < 150) {
-      return this.generateLocalLoop(ptA, ptB, wireIndex);
+    if (ptA.moduleId === ptB.moduleId && dx < 90 && dy < 90) {
+      return this.generateLocalLoop(ptA, ptB, wireIndex, rackBounds?.midY);
     }
 
-    // A와 B의 평균 세로 위치로 상단 덕트 vs 하단 덕트 결정
-    const avgY = (ptA.y + ptB.y) / 2;
-    let useTopDuct = avgY < midY;
+    const lane = (wireIndex % 12) * 3.5;
+    const topY = Math.max(10, topBase - lane);
+    const botY = Math.min(canvasH - 10, botBase + lane);
 
-    // 만약 두 단자 중 하나라도 상단에 가깝고 다른 하나도 하단 극단이 아니면 상단 덕트 우선
-    if (Math.min(ptA.y, ptB.y) < midY - 60 && Math.max(ptA.y, ptB.y) < midY + 50) {
-      useTopDuct = true;
-    } else if (Math.max(ptA.y, ptB.y) > midY + 60 && Math.min(ptA.y, ptB.y) > midY - 50) {
-      useTopDuct = false;
-    }
+    const plan = (ductY) => {
+      const a = this.exitRoute(ptA, ductY, obstacles);
+      const b = this.exitRoute(ptB, ductY, obstacles);
+      const len = Math.abs(ptA.y - ductY) + Math.abs(ptB.y - ductY);
+      return { a, b, cost: a.cost + b.cost + len / 400 };
+    };
+    const up = plan(topY);
+    const dn = plan(botY);
+    const best = up.cost <= dn.cost ? up : dn;
 
-    // 덕트 Y선 계산 및 안전 마진 클램핑 (상단/하단 잘림 및 모듈 가림 100% 방지)
-    // 차선 스택 시 모듈 안쪽이 아닌 모듈 바깥쪽(트러프 방향)으로 순차 적층
-    const laneOffset = Math.ceil(wireIndex / 2) * 4;
-    let ductY;
-    if (useTopDuct) {
-      ductY = topDuctBase - laneOffset;
-      // 최소 14px 유지하여 상단 프레임 밖으로 절대 나가지 않음
-      ductY = Math.max(14, ductY);
+    const waypoints = [...best.a.points, ...best.b.points.slice().reverse()];
+    return this.buildSmoothPathFromWaypoints(waypoints, 10);
+  }
+
+  /** 로컬 인접 단자 루프 (점퍼선) */
+  generateLocalLoop(ptA, ptB, wireIndex, midY = null) {
+    const offset = 16 + (wireIndex % 3) * 5;
+    const horizontal = Math.abs(ptA.x - ptB.x) >= Math.abs(ptA.y - ptB.y);
+    let c1x, c1y, c2x, c2y;
+    if (horizontal) {
+      // 모듈 하단 단자끼리는 아래로, 상단 단자끼리는 위로 휘게 하여 패널 그림을 가리지 않음
+      const down = midY !== null && (ptA.y + ptB.y) / 2 > midY;
+      const o = down ? offset : -offset;
+      c1x = ptA.x; c1y = ptA.y + o; c2x = ptB.x; c2y = ptB.y + o;
     } else {
-      ductY = bottomDuctBase + laneOffset;
-      // 최대 canvasH - 24px 유지하여 하단 서랍/경계 밖으로 절대 나가지 않음
-      ductY = Math.min(canvasH - 24, ductY);
+      const side = ptA.x <= ptB.x ? -1 : 1;
+      c1x = ptA.x + side * offset; c1y = ptA.y; c2x = ptB.x + side * offset; c2y = ptB.y;
     }
-
-    // 단자 진출입 스템(Stem) 거리: 단자에서 수직으로 18px 직진하여 인접 단자/블럭 걸침 방지
-    const stemLen = 18;
-    const stemOffsetA = (ptA.y > ductY) ? -stemLen : stemLen;
-    const stemOffsetB = (ptB.y > ductY) ? -stemLen : stemLen;
-
-    // 단자에서 수직으로 빠져나가는 1차 경유점
-    const exitA = { x: ptA.x, y: ptA.y + stemOffsetA };
-    const exitB = { x: ptB.x, y: ptB.y + stemOffsetB };
-
-    // 덕트 진입점 (단자 X 좌표 유지하면서 덕트 Y선으로 도달)
-    const ductEntryA = { x: ptA.x, y: ductY };
-    const ductEntryB = { x: ptB.x, y: ductY };
-
-    // 경로 제어점 배열: ptA -> exitA -> ductEntryA -> ductEntryB -> exitB -> ptB
-    const waypoints = [
-      ptA,
-      exitA,
-      ductEntryA,
-      ductEntryB,
-      exitB,
-      ptB
-    ];
-
-    return this.buildSmoothPathFromWaypoints(waypoints, 16);
+    return `M ${ptA.x.toFixed(1)} ${ptA.y.toFixed(1)} C ${c1x.toFixed(1)} ${c1y.toFixed(1)}, ${c2x.toFixed(1)} ${c2y.toFixed(1)}, ${ptB.x.toFixed(1)} ${ptB.y.toFixed(1)}`;
   }
 
-  /**
-   * 로컬 인접 단자 루프 (점퍼선 / 쇼트바 형태)
-   */
-  generateLocalLoop(ptA, ptB, wireIndex) {
-    const mx = (ptA.x + ptB.x) / 2;
-    const my = (ptA.y + ptB.y) / 2;
-    const offset = 22 + (wireIndex % 3) * 6;
-    // 옆으로 둥글게 우회하는 곡선
-    const cx1 = ptA.x + (ptA.x < ptB.x ? -offset : offset);
-    const cy1 = ptA.y;
-    const cx2 = ptB.x + (ptA.x < ptB.x ? -offset : offset);
-    const cy2 = ptB.y;
-
-    return `M ${ptA.x.toFixed(1)} ${ptA.y.toFixed(1)} C ${cx1.toFixed(1)} ${cy1.toFixed(1)}, ${cx2.toFixed(1)} ${cy2.toFixed(1)}, ${ptB.x.toFixed(1)} ${ptB.y.toFixed(1)}`;
-  }
-
-  /**
-   * 물리적 늘어짐 현수선(Catenary) 곡선 (바닥 잘림 방지 클램핑)
-   */
+  /** 현수선(Catenary) 곡선 */
   generateCatenaryPath(ptA, ptB, wireIndex, rackBounds) {
     const dx = ptB.x - ptA.x;
-    const dy = ptB.y - ptA.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-    let sag = Math.max(25, dist * 0.20) + (wireIndex % 4) * 5;
-
-    const canvasH = (rackBounds && rackBounds.canvasHeight) ? rackBounds.canvasHeight : 600;
-    const maxY = Math.max(ptA.y, ptB.y) + sag;
-    if (maxY > canvasH - 24) {
-      sag = Math.max(10, (canvasH - 24) - Math.max(ptA.y, ptB.y));
-    }
-
-    const cp1x = ptA.x + dx * 0.25;
-    const cp1y = ptA.y + sag * 0.8;
-    const cp2x = ptA.x + dx * 0.75;
-    const cp2y = ptB.y + sag * 0.8;
-
+    const dist = Math.hypot(dx, ptB.y - ptA.y);
+    let sag = Math.max(25, dist * 0.2) + (wireIndex % 4) * 5;
+    const canvasH = rackBounds?.canvasHeight ?? 600;
+    if (Math.max(ptA.y, ptB.y) + sag > canvasH - 12) sag = Math.max(10, canvasH - 12 - Math.max(ptA.y, ptB.y));
+    const cp1x = ptA.x + dx * 0.25, cp1y = ptA.y + sag * 0.8;
+    const cp2x = ptA.x + dx * 0.75, cp2y = ptB.y + sag * 0.8;
     return `M ${ptA.x.toFixed(1)} ${ptA.y.toFixed(1)} C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${ptB.x.toFixed(1)} ${ptB.y.toFixed(1)}`;
   }
 
-  /**
-   * 직각 맨해튼(Manhattan) 경로
-   */
-  generateManhattanPath(ptA, ptB, wireIndex, rackBounds) {
+  /** 직각 맨해튼 경로 */
+  generateManhattanPath(ptA, ptB, wireIndex) {
     const laneOffset = ((wireIndex % 2 === 0 ? 1 : -1) * Math.ceil(wireIndex / 2)) * 6;
     const midY = (ptA.y + ptB.y) / 2 + laneOffset;
-    return `M ${ptA.x} ${ptA.y} L ${ptA.x} ${midY} L ${ptB.x} ${midY} L ${ptB.x} ${ptB.y}`;
+    return `M ${ptA.x.toFixed(1)} ${ptA.y.toFixed(1)} L ${ptA.x.toFixed(1)} ${midY.toFixed(1)} L ${ptB.x.toFixed(1)} ${midY.toFixed(1)} L ${ptB.x.toFixed(1)} ${ptB.y.toFixed(1)}`;
   }
 
-  /**
-   * 경유점(Waypoints) 배열을 바탕으로 모서리에 부드러운 필렛(Fillet)을 입힌 SVG Path 생성
-   */
-  buildSmoothPathFromWaypoints(points, radius = 14) {
-    if (points.length < 2) return '';
-    if (points.length === 2) {
-      return `M ${points[0].x} ${points[0].y} L ${points[1].x} ${points[1].y}`;
+  /** 경유점 사이 모서리를 둥글게 처리한 SVG Path */
+  buildSmoothPathFromWaypoints(points, radius = 12) {
+    // 중복/일직선 경유점 정리
+    const pts = [];
+    for (const p of points) {
+      const last = pts[pts.length - 1];
+      if (last && Math.abs(last.x - p.x) < 0.5 && Math.abs(last.y - p.y) < 0.5) continue;
+      pts.push(p);
     }
-
-    let d = `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
-
-    for (let i = 1; i < points.length - 1; i++) {
-      const pPrev = points[i - 1];
-      const pCurr = points[i];
-      const pNext = points[i + 1];
-
-      // 벡터 v1: curr -> prev, v2: curr -> next
-      const v1x = pPrev.x - pCurr.x;
-      const v1y = pPrev.y - pCurr.y;
-      const len1 = Math.sqrt(v1x * v1x + v1y * v1y);
-
-      const v2x = pNext.x - pCurr.x;
-      const v2y = pNext.y - pCurr.y;
-      const len2 = Math.sqrt(v2x * v2x + v2y * v2y);
-
-      if (len1 < 0.001 || len2 < 0.001) {
-        continue;
-      }
-
-      const effectiveR = Math.min(radius, len1 * 0.45, len2 * 0.45);
-
-      // 필렛 시작점과 끝점
-      const startX = pCurr.x + (v1x / len1) * effectiveR;
-      const startY = pCurr.y + (v1y / len1) * effectiveR;
-
-      const endX = pCurr.x + (v2x / len2) * effectiveR;
-      const endY = pCurr.y + (v2y / len2) * effectiveR;
-
-      d += ` L ${startX.toFixed(1)} ${startY.toFixed(1)}`;
-      // 2차 베지어로 코너 둥글게 처리
-      d += ` Q ${pCurr.x.toFixed(1)} ${pCurr.y.toFixed(1)}, ${endX.toFixed(1)} ${endY.toFixed(1)}`;
+    if (pts.length < 2) return '';
+    if (pts.length === 2) return `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)} L ${pts[1].x.toFixed(1)} ${pts[1].y.toFixed(1)}`;
+    let d = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
+    for (let i = 1; i < pts.length - 1; i++) {
+      const p0 = pts[i - 1], p1 = pts[i], p2 = pts[i + 1];
+      const v1x = p0.x - p1.x, v1y = p0.y - p1.y, l1 = Math.hypot(v1x, v1y);
+      const v2x = p2.x - p1.x, v2y = p2.y - p1.y, l2 = Math.hypot(v2x, v2y);
+      if (l1 < 0.001 || l2 < 0.001) continue;
+      const r = Math.min(radius, l1 * 0.45, l2 * 0.45);
+      d += ` L ${(p1.x + v1x / l1 * r).toFixed(1)} ${(p1.y + v1y / l1 * r).toFixed(1)}`;
+      d += ` Q ${p1.x.toFixed(1)} ${p1.y.toFixed(1)}, ${(p1.x + v2x / l2 * r).toFixed(1)} ${(p1.y + v2y / l2 * r).toFixed(1)}`;
     }
-
-    const lastPt = points[points.length - 1];
-    d += ` L ${lastPt.x.toFixed(1)} ${lastPt.y.toFixed(1)}`;
-
+    const last = pts[pts.length - 1];
+    d += ` L ${last.x.toFixed(1)} ${last.y.toFixed(1)}`;
     return d;
   }
 }

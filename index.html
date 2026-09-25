@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>IEG-6030 전기기계 구조 실습 시뮬레이터</title>
   <!-- 스타일시트 로드 -->
-  <link rel="stylesheet" href="css/main.css?v=10">
-  <link rel="stylesheet" href="css/workbench.css?v=10">
-  <link rel="stylesheet" href="css/curriculum.css?v=10">
+  <link rel="stylesheet" href="css/main.css?v=11">
+  <link rel="stylesheet" href="css/workbench.css?v=11">
+  <link rel="stylesheet" href="css/curriculum.css?v=11">
 </head>
 <body>
 
@@ -36,7 +36,7 @@
     </nav>
 
     <div class="header-actions">
-      <button class="btn btn-sm" onclick="alert('IEG-6030 전기기계 구조 실습장비 통합 시뮬레이터')">ℹ️ 시스템 안내</button>
+      <button class="btn btn-sm" onclick="alert('IEG-6030 전기기계 구조 실습장비 통합 시뮬레이터\n\n· 회로망 해석(절점해석) 기반: 결선한 대로 전압·전류가 계산됩니다.\n· 디지털 메터는 선택한 레인지 단자 기준 실제값을 표시하며, 레인지 초과 시 OL을 표시합니다.\n· 발전기 특성은 1800rpm 기준, 2극 기기(f = n/60)로 모델링되어 있습니다.')">ℹ️ 시스템 안내</button>
     </div>
   </header>
 
@@ -98,6 +98,7 @@
     </div>
 
     <div class="toolbar-group">
+      <button id="btn_focus_rack" class="btn btn-sm btn-outline" style="border-color:#334155; color:#cbd5e1;" title="좌·우 패널을 접어 실습 장비를 크게 봅니다 (단축키 F)">⛶ 장비 확대</button>
       <button id="btn_record_data" class="btn btn-sm" style="background:#0284c7; border-color:#0284c7;" title="현재 계측값을 보고서용 데이터로 기록합니다">
         📥 데이터 기록 <span id="record_count_badge" style="background:rgba(255,255,255,0.25); padding:1px 5px; border-radius:10px; font-size:10px; margin-left:2px;">0</span>
       </button>
@@ -155,6 +156,19 @@
             </div>
           </div>
 
+          <div class="guide-card" id="manual_spin_card" style="display:none; background:#0c1627; border-color:#38bdf8;">
+            <h4>⚡ 회전자 구동</h4>
+            <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:4px;">
+              <button type="button" id="btn_manual_spin_cw" class="btn btn-sm" style="background:#2563eb; color:#fff; font-weight:700; font-size:11px; padding:4px 8px;">↷ CW 수동</button>
+              <button type="button" id="btn_manual_spin_ccw" class="btn btn-sm" style="background:#0891b2; color:#fff; font-weight:700; font-size:11px; padding:4px 8px;">↶ CCW 수동</button>
+              <button type="button" id="btn_continuous_spin" class="btn btn-sm" style="background:#16a34a; color:#fff; font-weight:700; font-size:11px; padding:4px 8px;">▶ 연속 회전</button>
+              <button type="button" id="btn_continuous_stop" class="btn btn-sm" style="background:#dc2626; color:#fff; font-weight:700; font-size:11px; padding:4px 8px;">■ 정지</button>
+            </div>
+            <div style="margin-top:6px; border-top:1px solid #334155; padding-top:4px;">
+              <button type="button" id="btn_add_drive_unit" class="btn btn-sm" style="width:100%; background:#7c3aed; color:#fff; font-weight:700; font-size:11px; padding:4px 8px;">⚡ + 구동 전동기(IEG-6030-11) 추가</button>
+            </div>
+            <p style="font-size:10px; color:#64748b; margin-top:4px;">수동: 클릭 시 300rpm으로 튕긴 뒤 서서히 감속 · 연속: 150rpm 유지 · 계철 프레임 위에서 마우스 휠로도 돌릴 수 있습니다.</p>
+          </div>
           <div class="guide-card">
             <h4>📝 실습 진행 순서</h4>
             <ol class="guide-list" id="guide_exp_procedure"></ol>
@@ -230,19 +244,6 @@
             </div>
           </div>
 
-          <div class="guide-card" id="manual_spin_card" style="display:none; background:#0c1627; border-color:#38bdf8;">
-            <h4>⚡ 회전자 구동</h4>
-            <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:4px;">
-              <button type="button" id="btn_manual_spin_cw" class="btn btn-sm" style="background:#2563eb; color:#fff; font-weight:700; font-size:11px; padding:4px 8px;">↷ CW 수동</button>
-              <button type="button" id="btn_manual_spin_ccw" class="btn btn-sm" style="background:#0891b2; color:#fff; font-weight:700; font-size:11px; padding:4px 8px;">↶ CCW 수동</button>
-              <button type="button" id="btn_continuous_spin" class="btn btn-sm" style="background:#16a34a; color:#fff; font-weight:700; font-size:11px; padding:4px 8px;">▶ 연속 회전</button>
-              <button type="button" id="btn_continuous_stop" class="btn btn-sm" style="background:#dc2626; color:#fff; font-weight:700; font-size:11px; padding:4px 8px;">■ 정지</button>
-            </div>
-            <div style="margin-top:6px; border-top:1px solid #334155; padding-top:4px;">
-              <button type="button" id="btn_add_drive_unit" class="btn btn-sm" style="width:100%; background:#7c3aed; color:#fff; font-weight:700; font-size:11px; padding:4px 8px;">⚡ + 구동 전동기(IEG-6030-11) 추가</button>
-            </div>
-            <p style="font-size:10px; color:#64748b; margin-top:4px;">수동: 한번 클릭 시 300RPM 감속. 연속: 150RPM 유지.</p>
-          </div>
       </div>
 
       <!-- 우측 가상 오실로스코프 및 실시간 계측 모니터 도크 -->
@@ -301,15 +302,15 @@
             <h4>📊 실시간 상태 계측값</h4>
             <div style="display:flex; flex-direction:column; gap:8px; font-size:13px;">
               <div style="display:flex; justify-content:space-between;">
-                <span style="color:#94a3b8;">발전 단자 전압:</span>
+                <span style="color:#94a3b8;" id="dock_lbl_volt">발전 단자 전압:</span>
                 <strong id="dock_stat_volt" style="color:#38bdf8;">0.0 V</strong>
               </div>
               <div style="display:flex; justify-content:space-between;">
-                <span style="color:#94a3b8;">부하 선간 전류:</span>
+                <span style="color:#94a3b8;" id="dock_lbl_curr">부하 선간 전류:</span>
                 <strong id="dock_stat_curr" style="color:#38bdf8;">0.00 A</strong>
               </div>
               <div style="display:flex; justify-content:space-between;">
-                <span style="color:#94a3b8;">모터 회전 속도:</span>
+                <span style="color:#94a3b8;" id="dock_lbl_rpm">모터 회전 속도:</span>
                 <strong id="dock_stat_rpm" style="color:#22c55e;">0 RPM</strong>
               </div>
               <div style="display:flex; justify-content:space-between;">
@@ -321,10 +322,11 @@
                 <strong id="dock_stat_galv" style="color:#a78bfa;">0.00 mA</strong>
               </div>
               <div style="display:flex; justify-content:space-between;">
-                <span style="color:#94a3b8;">발전 주파수:</span>
+                <span style="color:#94a3b8;" id="dock_lbl_freq">발전 주파수:</span>
                 <strong id="dock_stat_freq" style="color:#38bdf8;">0.0 Hz</strong>
               </div>
             </div>
+            <div id="dock_warnings" class="dock-warnings" style="display:none;"></div>
             <button id="btn_dock_record" class="btn btn-sm btn-primary" style="width:100%; margin-top:12px; font-weight:700;">
               📥 실시간 계측값 기록 (Space)
             </button>
@@ -334,8 +336,9 @@
           <div class="guide-card" style="background:#1e293b; border-color:#334155;">
             <h4>💡 마우스 조작 안내</h4>
             <ul style="padding-left:16px; font-size:11.5px; color:#94a3b8; line-height:1.5;">
-              <li><strong>배선 연결:</strong> 단자를 마우스로 클릭 후 다른 단자를 클릭하면 자동 연결됩니다.</li>
-              <li><strong>배선 삭제:</strong> 연결된 전선을 클릭하면 제거됩니다.</li>
+              <li><strong>배선 연결:</strong> 단자를 클릭한 뒤 다른 단자를 클릭하면 연결됩니다. 이미 플러그가 꽂힌 단자에도 겹쳐 꽂을 수 있습니다 (Esc: 취소).</li>
+              <li><strong>배선 삭제:</strong> 전선을 클릭해 선택한 뒤 더블클릭하거나 Delete 키를 누릅니다.</li>
+              <li><strong>램프:</strong> 03·04번 램프 소켓을 클릭하면 전구를 장착/분리합니다.</li>
               <li><strong>노브 조절:</strong> 노브 위에서 마우스 휠을 굴리거나 드래그하여 값을 미세 조절합니다.</li>
               <li><strong>스위치 조작:</strong> 전원 스위치, 토글 스위치, 캠스위치를 클릭하여 상태를 전환합니다.</li>
             </ul>
@@ -394,6 +397,6 @@
   </main>
 
   <!-- 애플리케이션 모듈 진입 스크립트 -->
-  <script type="module" src="js/app.js?v=10"></script>
+  <script type="module" src="js/app.js?v=11"></script>
 </body>
 </html>

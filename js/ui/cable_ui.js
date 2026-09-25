@@ -1,3 +1,5 @@
+import { MODULE_DEFS } from '../modules/module_defs.js';
+
 /**
  * IEG-6030 마우스 배선 인터랙션 및 실시간 전류 흐름 애니메이션 SVG 렌더러
  */
@@ -13,6 +15,7 @@ export class CableUI {
     this.connectingFrom = null;    // { moduleId, terminalId, el, x, y }
     this.mousePos = { x: 0, y: 0 };
     this.isDragging = false;
+    this.selectedWireId = null;
 
     this.wireColorPalette = [
       { name: '적색 (+ / R상)', hex: '#dc2626' },
@@ -89,6 +92,12 @@ export class CableUI {
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         this.cancelConnecting();
+        this.selectWire(null);
+      }
+      if ((e.key === 'Delete' || e.key === 'Backspace') && this.selectedWireId &&
+          !['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
+        e.preventDefault();
+        this.deleteWire(this.selectedWireId);
       }
     });
 
@@ -149,7 +158,7 @@ export class CableUI {
     const dx = c11x - c10x;
     const dy = c11y - c10y;
     const dist = Math.hypot(dx, dy);
-    if (dist < radius10 + radius11) return '';
+    if (!isFinite(dist) || !(radius10 > 0) || !(radius11 > 0) || dist < radius10 + radius11) return '';
 
     const alpha = Math.atan2(dy, dx);
     const gamma = Math.asin(Math.max(-1, Math.min(1, (radius11 - radius10) / dist)));
@@ -173,7 +182,7 @@ export class CableUI {
     const beltLoop = `M ${p1x.toFixed(1)} ${p1y.toFixed(1)} L ${p2x.toFixed(1)} ${p2y.toFixed(1)} A ${radius11.toFixed(1)} ${radius11.toFixed(1)} 0 1 0 ${p3x.toFixed(1)} ${p3y.toFixed(1)} L ${p4x.toFixed(1)} ${p4y.toFixed(1)} A ${radius10.toFixed(1)} ${radius10.toFixed(1)} 0 0 0 ${p1x.toFixed(1)} ${p1y.toFixed(1)} Z`;
 
     return `
-      <g class="animated-drive-belt-group">
+      <g class="animated-drive-belt-group" pointer-events="none">
         <!-- 벨트 외곽 그림자 -->
         <path d="${beltLoop}" fill="rgba(15,23,42,0.6)" stroke="#09090b" stroke-width="6" stroke-linejoin="round"/>
         <!-- 고무 벨트 본체 -->
@@ -185,97 +194,90 @@ export class CableUI {
   }
 
   /**
+   * 라우팅 장애물 (계측기 표시창, 노브, 스위치, 단자) 수집 — SVG 좌표
+   */
+  collectObstacles(svgRect) {
+    const obs = [];
+    const add = (el, kind, pad = 0) => {
+      const r = el.getBoundingClientRect();
+      if (r.width === 0) return;
+      const mod = el.closest('.rack-module');
+      obs.push({
+        x1: r.left - svgRect.left - pad, x2: r.right - svgRect.left + pad,
+        y1: r.top - svgRect.top - pad, y2: r.bottom - svgRect.top + pad,
+        kind, moduleId: mod ? mod.dataset.moduleId : ''
+      });
+    };
+    document.querySelectorAll('.digital-panel-meter, .digital-meter-display').forEach(el => add(el, 'meter', 3));
+    document.querySelectorAll('.control-knob-wrapper, .rotary-switch-wrapper, .rocker-switch').forEach(el => add(el, 'control', 2));
+    document.querySelectorAll('.terminal-jack').forEach(el => add(el, 'terminal', 2));
+    // 모듈 정의의 보호 영역 (가변저항 눈금판, 램프 등)
+    document.querySelectorAll('.rack-module').forEach(modEl => {
+      const def = MODULE_DEFS[modEl.dataset.moduleId];
+      if (!def || !def.obstacles) return;
+      const r = modEl.getBoundingClientRect();
+      for (const o of def.obstacles) {
+        obs.push({
+          x1: r.left - svgRect.left + r.width * o.x / 100, x2: r.left - svgRect.left + r.width * (o.x + o.w) / 100,
+          y1: r.top - svgRect.top + r.height * o.y / 100, y2: r.top - svgRect.top + r.height * (o.y + o.h) / 100,
+          kind: 'panel', moduleId: def.id
+        });
+      }
+    });
+    return obs;
+  }
+
+  /**
    * 모든 전선 및 벨트 SVG 렌더링
    */
   render() {
     const svgRect = this.svg.getBoundingClientRect();
-    const topDuctEl = document.querySelector('.rack-cable-duct.top');
-    const bottomDuctEl = document.querySelector('.rack-cable-duct.bottom');
+    if (svgRect.width === 0 || svgRect.height === 0) return; // 워크벤치 탭이 숨겨진 상태
     const firstMod = document.querySelector('.rack-module');
-    const rackEl = document.getElementById('equipment_rack');
-
-    let topDuct, bottomDuct, midY;
-
+    let topDuct = 30, bottomDuct = Math.max(120, svgRect.height - 40), midY = svgRect.height / 2;
     if (firstMod) {
       const mRect = firstMod.getBoundingClientRect();
       const modTop = mRect.top - svgRect.top;
       const modBottom = mRect.bottom - svgRect.top;
-      // 상단 덕트: 모듈 최상단보다 52px 충분히 위로 벌려 모듈 헤더/블럭 가림을 완전 해소
-      // 캔버스 최상단 테두리에 잘리지 않도록 최소 14px 안전 여백 강제
-      topDuct = Math.max(14, modTop - 52);
-      // 하단 덕트: 모듈 최하단보다 52px 충분히 아래로 벌려 하단 단자/스위치 가림을 완전 해소
-      // 캔버스 바닥 및 계측 서랍에 가리지 않도록 canvasHeight - 22px 안전 여백 강제
-      bottomDuct = Math.min(svgRect.height - 22, modBottom + 52);
+      topDuct = Math.max(10, modTop - 13);
+      bottomDuct = Math.min(svgRect.height - 10, modBottom + 13);
       midY = (modTop + modBottom) / 2;
-    } else if (rackEl) {
-      const rRect = rackEl.getBoundingClientRect();
-      const rTop = rRect.top - svgRect.top;
-      const rBottom = rRect.bottom - svgRect.top;
-      topDuct = Math.max(14, rTop - 26);
-      bottomDuct = Math.min(svgRect.height - 22, rBottom + 26);
-      midY = (rTop + rBottom) / 2;
-    } else {
-      topDuct = 30;
-      bottomDuct = Math.max(120, svgRect.height - 40);
-      midY = svgRect.height / 2;
     }
+    const rackBounds = { left: 0, right: svgRect.width, canvasHeight: svgRect.height, topDuct, bottomDuct, midY };
+    const obstacles = this.collectObstacles(svgRect);
 
-    const rackBounds = {
-      left: 0,
-      right: svgRect.width,
-      canvasHeight: svgRect.height,
-      topDuct,
-      bottomDuct,
-      midY
-    };
+    const calc = this.engine.state.calculatedValues || {};
+    const isCircuitActive = Math.abs(calc.genLoadCurr || 0) > 0.005 || Math.abs(calc.iField || 0) > 0.005 ||
+      (this.engine.isRunning() && Math.abs(calc.genTermVolt || 0) > 0.5);
 
-    // 회로 통전 상태 (전류가 실제로 흐르고 있는지)
-    const isCircuitActive = (
-      (this.engine.isRunning() && (Math.abs(this.engine.state.autoDriverRpm) > 50 || Math.abs(this.engine.state.rotorRpm || 0) > 50)) ||
-      (this.engine.state.powerSupplyOn && ((this.engine.state.calculatedValues?.genTermVolt || 0) > 1 || (this.engine.state.calculatedValues?.iField || 0) > 0.01))
-    );
+    let wiresSvg = this.renderDriveBeltSvg();
+    let plugsSvg = '';
 
-    let wiresSvg = '';
-
-    // 1. 구동 벨트 렌더링
-    wiresSvg += this.renderDriveBeltSvg();
-
-    // 2. 전선 렌더링
     this.engine.wires.forEach((wire, idx) => {
       const ptA = this.getTerminalCoord(wire.from.moduleId, wire.from.terminalId);
       const ptB = this.getTerminalCoord(wire.to.moduleId, wire.to.terminalId);
-
-      if (ptA && ptB) {
-        const pathD = this.router.generatePath(ptA, ptB, idx, rackBounds);
-
-        // 통전 중일 때 전류 흐름 파티클 레이어
-        let currentFlowSvg = '';
-        if (isCircuitActive) {
-          currentFlowSvg = `
-            <!-- 통전 시 실시간 전류 흐름 파티클 효과 -->
-            <path class="wire-current-flow" d="${pathD}" fill="none" stroke="#fef08a" stroke-width="2.5" stroke-dasharray="10, 16" stroke-linecap="round"/>
-          `;
-        }
-
-        wiresSvg += `
-          <g class="rendered-wire" data-wire-id="${wire.id}">
-            <!-- 그림자 -->
-            <path d="${pathD}" fill="none" stroke="rgba(0,0,0,0.45)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
-            <!-- 본체 피복선 -->
-            <path class="wire-interactive-path" d="${pathD}" fill="none" stroke="${wire.color}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
-            <!-- 광택 하이라이트 -->
-            <path d="${pathD}" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-            ${currentFlowSvg}
-            <!-- 바나나 플러그 부트 -->
-            <circle cx="${ptA.x}" cy="${ptA.y}" r="6" fill="${wire.color}" stroke="#111" stroke-width="2"/>
-            <circle cx="${ptB.x}" cy="${ptB.y}" r="6" fill="${wire.color}" stroke="#111" stroke-width="2"/>
-          </g>
-        `;
+      if (!ptA || !ptB) return;
+      const pathD = this.router.generatePath(ptA, ptB, idx, rackBounds, obstacles);
+      const selected = wire.id === this.selectedWireId;
+      const flow = isCircuitActive
+        ? `<path class="wire-current-flow" d="${pathD}" fill="none" stroke="#fef08a" stroke-width="2" stroke-dasharray="8, 16" stroke-linecap="round" pointer-events="none"/>`
+        : '';
+      wiresSvg += `
+        <g class="rendered-wire ${selected ? 'wire-selected' : ''}" data-wire-id="${wire.id}">
+          <path d="${pathD}" fill="none" stroke="rgba(0,0,0,0.45)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          ${selected ? `<path d="${pathD}" fill="none" stroke="#38bdf8" stroke-width="10" stroke-opacity="0.55" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>` : ''}
+          <path class="wire-interactive-path" d="${pathD}" fill="none" stroke="${wire.color}" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="${pathD}" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>
+          ${flow}
+        </g>`;
+      // 4mm 바나나 플러그 머리: 단자 중앙을 비워(링 형태) 다른 플러그를 겹쳐 꽂을 수 있게 표시, 클릭은 단자로 통과
+      for (const pt of [ptA, ptB]) {
+        plugsSvg += `<circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="5.2" fill="none" stroke="${wire.color}" stroke-width="3" pointer-events="none"/>`;
+        plugsSvg += `<circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="6.8" fill="none" stroke="#111" stroke-width="1" pointer-events="none"/>`;
       }
     });
 
-    wiresSvg += `<g id="wire_preview_group"></g>`;
-    this.svg.innerHTML = wiresSvg;
+    this.svg.innerHTML = wiresSvg + `<g class="plug-layer">${plugsSvg}</g><g id="wire_preview_group" pointer-events="none"></g>`;
     this.attachWireDeleteEvents();
   }
 
@@ -301,18 +303,43 @@ export class CableUI {
     `;
   }
 
+  selectWire(wireId) {
+    this.selectedWireId = wireId;
+    this.render();
+    if (wireId && window.app && window.app.showToast) {
+      window.app.showToast('선택한 전선: 더블클릭 또는 Delete 키로 삭제 (Esc: 선택 해제)');
+    }
+  }
+
+  deleteWire(wireId) {
+    this.engine.removeWire(wireId);
+    this.selectedWireId = null;
+    if (this.onWireChange) this.onWireChange(this.engine.wires);
+    this.render();
+  }
+
+  /** 전선 아래에 단자가 있으면 단자 클릭을 우선 처리 (케이블이 4mm 단자를 가려 결선을 방해하지 않도록) */
+  terminalUnderPointer(e) {
+    const els = document.elementsFromPoint(e.clientX, e.clientY);
+    return els.find(el => el.classList && el.classList.contains('terminal-jack')) || null;
+  }
+
   attachWireDeleteEvents() {
-    const wireGroups = this.svg.querySelectorAll('.rendered-wire');
-    wireGroups.forEach(g => {
+    this.svg.querySelectorAll('.rendered-wire').forEach(g => {
       g.addEventListener('click', (e) => {
-        const wireId = g.dataset.wireId;
-        if (wireId) {
-          this.engine.removeWire(wireId);
-          if (this.onWireChange) {
-            this.onWireChange(this.engine.wires);
-          }
-          this.render();
+        e.stopPropagation();
+        const jack = this.terminalUnderPointer(e);
+        if (jack) {
+          this.handleTerminalClick(jack.dataset.module, jack.dataset.terminal, jack);
+          return;
         }
+        if (this.connectingFrom) return; // 결선 중에는 전선 선택 안 함
+        this.selectWire(g.dataset.wireId === this.selectedWireId ? null : g.dataset.wireId);
+      });
+      g.addEventListener('dblclick', (e) => {
+        e.stopPropagation();
+        if (this.terminalUnderPointer(e)) return;
+        this.deleteWire(g.dataset.wireId);
       });
     });
   }

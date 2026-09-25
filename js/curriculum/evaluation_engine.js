@@ -46,7 +46,7 @@ export const PRACTICE_QUESTIONS = [
   {
     id: 'q4',
     category: '발전기 부하 특성',
-    question: '직류 분권 발전기에서 부하 장치(IEG-6030-03)의 스위치를 올려 부하 전류(IL)가 증가할 때 단자 전압이 떨어지는 핵심 원인 3가지가 아닌 것은?',
+    question: '직류 분권 발전기에서 R/L/C 부하 모듈(IEG-6030-05)의 저항 스위치를 올려 부하 전류(IL)가 증가할 때 단자 전압이 떨어지는 핵심 원인 3가지가 아닌 것은?',
     options: [
       '전기자 권선 내부 저항에 의한 전압 강하 (Ia * Ra)',
       '부하 전류 자속에 의한 감자성 전기자 반작용 (Armature Reaction)',
@@ -80,7 +80,7 @@ export const PRACTICE_QUESTIONS = [
       '부하 전류의 역률을 1.0으로 보정하기 위해'
     ],
     correctIndex: 0,
-    explanation: '직류 전동기는 정지 시 역기전력 Ec = 0이므로 전기자 저항 Ra만 존재합니다. Ra는 1Ω 미만으로 매우 작으므로 전압 V를 직접 가하면 정격의 10~20배 대전류가 흘러 권선이 타버립니다. 따라서 기동 저항을 최대로 직렬 삽입하여 기동 전류를 안전하게 억제해야 합니다.'
+    explanation: '직류 전동기는 정지 시 역기전력 Ec = 0이므로 전기자 저항 Ra만 존재합니다. Ra는 매우 작으므로(실습기 수 Ω, 대형기 1Ω 미만) 전압 V를 직접 가하면 정격의 10~20배 대전류가 흘러 권선이 타버립니다. 따라서 기동 저항을 최대로 직렬 삽입하여 기동 전류를 안전하게 억제해야 합니다.'
   },
   {
     id: 'q7',
@@ -124,15 +124,15 @@ export const PRACTICE_QUESTIONS = [
   {
     id: 'q10',
     category: '극수 변환 제어',
-    question: 'IEG-6030-12 극수 변환 제어기를 사용하여 60Hz 전원에서 8극(P=8)에서 4극(P=4)으로 절환했을 때 동기 속도의 변화는?',
+    question: 'IEG-6030-12 극수 전환기를 LOW(Δ, 4극)에서 HIGH(YY, 2극)로 절환했을 때 60Hz 전원에서 동기 속도의 변화는?',
     options: [
-      '900 RPM에서 1,800 RPM으로 동기 속도가 2배 빨라진다.',
-      '1,800 RPM에서 900 RPM으로 동기 속도가 절반으로 느려진다.',
+      '1,800 RPM에서 3,600 RPM으로 동기 속도가 2배 빨라진다.',
+      '3,600 RPM에서 1,800 RPM으로 동기 속도가 절반으로 느려진다.',
       '극수가 바뀌어도 주파수가 60Hz이므로 회전 속도는 전혀 변하지 않는다.',
       '회전자계가 소멸하여 모터가 즉시 역회전한다.'
     ],
     correctIndex: 0,
-    explanation: '동기 속도 Ns = 120f / P 입니다. 8극 시 Ns = 120*60/8 = 900 RPM, 4극 시 Ns = 120*60/4 = 1,800 RPM으로 극수가 1/2로 줄어들면 동기 회전 속도는 정확히 2배로 증가합니다.'
+    explanation: '동기 속도 Ns = 120f / P 입니다. 4극 시 Ns = 120×60/4 = 1,800 RPM, 2극 시 Ns = 120×60/2 = 3,600 RPM으로 극수가 1/2로 줄면 동기 속도는 2배가 됩니다. (실습 09: 슬립을 포함한 실제 회전수 약 1,740 ↔ 3,450 RPM)'
   }
 ];
 
@@ -212,8 +212,10 @@ export class EvaluationEngine {
     let assemblyScore = 0;
     if (exp.assemblyConfig) {
       const curAssembly = this.engine.assembly;
-      let rotorOk = (curAssembly.rotorType === exp.assemblyConfig.rotor);
-      let beltOk = (curAssembly.beltConnected === exp.assemblyConfig.beltInstalled);
+      const req = exp.assemblyConfig.rotor;
+      const cur = curAssembly.rotorType;
+      let rotorOk = (cur === req) || (['DISK_A', 'DISK_B'].includes(req) && ['DISK_A', 'DISK_B'].includes(cur));
+      let beltOk = (!!curAssembly.beltConnected === !!exp.assemblyConfig.beltInstalled);
 
       if (rotorOk && beltOk) {
         assemblyScore = 20;
@@ -246,26 +248,33 @@ export class EvaluationEngine {
       desc: `필수 배선 통전 상태: ${wireMatchedCount} / ${targetWires.length}개 완료 (${Math.round(wireRatio * 100)}%)`
     });
 
-    // 4. 운전 및 계측 동작 검사 (20점)
-    let opScore = 0;
-    const calc = this.engine.state.calculatedValues;
-    if (exp.id === 'GEN-01') {
-      const gVal = Math.abs(this.engine.meterPhysics.getCurrentValue('M_GALVANO'));
-      if (gVal > 0.05) opScore = 20;
-    } else if (exp.id.startsWith('GEN-')) {
-      if (this.engine.state.autoDriverRpm > 500) opScore = 20;
-    } else if (exp.id.startsWith('MOT-')) {
-      if (this.engine.state.powerSupplyOn || calc.psuDcVolts > 5 || calc.psuAcVolts > 5) opScore = 20;
-    } else {
-      opScore = 20;
-    }
+    // 4. 운전 및 계측 동작 검사 (20점): 실습별 이론 기대 범위(verify) 충족 여부
+    const val = (key) => {
+      const st = this.engine.state;
+      if (key === 'rpm') return { ok: true, v: Math.abs(st.rotorRpm || 0), unit: 'rpm' };
+      if (key === 'galvPeak') return { ok: true, v: st.galvPeak || 0, unit: 'mA' };
+      const abs = key.endsWith('_abs');
+      const id = abs ? key.slice(0, -4) : key;
+      const r = this.engine.readings[id];
+      if (!r || !r.active) return { ok: false, v: 0, unit: r ? r.unit : '', why: '계측기 미결선' };
+      if (r.ol) return { ok: false, v: r.value, unit: r.unit, why: '레인지 초과(OL)' };
+      return { ok: true, v: abs ? Math.abs(r.display) : r.display, unit: r.unit };
+    };
+    const checks = (exp.verify || []).map(c => {
+      const m = val(c.key);
+      const pass = m.ok && m.v >= c.min && m.v <= c.max;
+      return { ...c, pass, text: `${c.label}: ${m.ok ? m.v.toFixed(m.unit === 'rpm' ? 0 : 2) + ' ' + m.unit : m.why} (기준 ${c.min}~${c.max})` };
+    });
+    const allPass = checks.length > 0 && checks.every(c => c.pass);
+    const opScore = checks.length === 0 ? 20 : Math.round(20 * checks.filter(c => c.pass).length / checks.length);
     earnedScore += opScore;
 
     checklist.push({
-      item: '장비 운전 및 계측 상태',
-      passed: opScore === 20,
+      item: '장비 운전 및 계측 결과',
+      passed: allPass,
       score: opScore,
-      desc: opScore === 20 ? '발전기 정격 회전 및 계측기 바늘 지침 측정값이 목표 범위에 도달했습니다.' : '구동 모터 운전(RPM) 또는 발전 전압 발생 조건을 충족하지 못했습니다.'
+      desc: checks.length ? checks.map(c => `${c.pass ? '✓' : '✕'} ${c.text}`).join(' / ')
+        : '운전 판정 기준 없음'
     });
 
     return {

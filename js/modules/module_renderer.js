@@ -43,11 +43,12 @@ export class ModuleRenderer {
         const val = this.engine.getControlValue(def.id, c.id, c.value);
         const ratio = (val - c.min) / (c.max - c.min);
         const angle = c.angleMin + ratio * (c.angleMax - c.angleMin);
+        const knobTitle = `${c.label}: 드래그 또는 마우스 휠로 조절`;
         const sizePct = c.sizePercent || 38.0;
 
         controlsHtml += `
           <div class="control-knob-wrapper" style="left: ${c.x}%; top: ${c.y}%; width: ${sizePct}%; aspect-ratio: 1/1;">
-            <div class="knob-body"
+            <div class="knob-body" title="${knobTitle}"
                  data-module="${def.id}"
                  data-control="${c.id}"
                  data-min="${c.min}"
@@ -56,7 +57,7 @@ export class ModuleRenderer {
                  style="transform: rotate(${angle}deg);">
               <div class="knob-indicator"></div>
             </div>
-            <div class="knob-val-bubble" id="val_${def.id}_${c.id}">${val} ${c.unit || ''}</div>
+            <div class="knob-val-bubble" id="val_${def.id}_${c.id}" data-unit="${c.unit || ''}">${val} ${c.unit || ''}</div>
           </div>
         `;
       } else if (c.type === 'rocker_switch') {
@@ -98,6 +99,7 @@ export class ModuleRenderer {
         <div class="toggle-switch-wrapper ${state ? 'sw-up' : 'sw-down'}"
              data-module="${def.id}"
              data-switch="${s.id}"
+             title="${s.id} ${s.label} (${state ? 'ON' : 'OFF'})"
              style="left: ${s.x}%; top: ${s.y}%;">
           <div class="toggle-lever"></div>
           <span class="toggle-label">${s.label}</span>
@@ -105,11 +107,15 @@ export class ModuleRenderer {
       `;
     }
 
-    // 램프 부하 (03번, 04번)
+    // 램프 부하 (03번, 04번) — 소켓 클릭 시 전구 장착/분리
     let lampsHtml = '';
     for (const l of (def.lamps || [])) {
+      const installed = this.engine.getControlValue(def.id, `BULB_${l.id}`, true);
       lampsHtml += `
-        <div class="lamp-socket" id="lamp_${def.id}_${l.id}" style="left: ${l.x}%; top: ${l.y}%;">
+        <div class="lamp-socket ${installed ? '' : 'bulb-removed'}" id="lamp_${def.id}_${l.id}"
+             data-module="${def.id}" data-lamp="${l.id}"
+             title="${l.label} 전구 (${l.rating}V) — 클릭하여 장착/분리"
+             style="left: ${l.x}%; top: ${l.y}%;">
           <div class="lamp-bulb">
             <div class="lamp-filament"></div>
             <div class="lamp-glow"></div>
@@ -125,23 +131,25 @@ export class ModuleRenderer {
       if (m.type === 'digital_panel') {
         const themeClass = m.theme ? `theme-${m.theme}` : 'theme-cyan';
         metersHtml += `
-          <div class="digital-panel-meter ${themeClass}" id="meter_${m.id}" style="left: ${m.x}%; top: ${m.y}%; width: ${m.w}%; height: ${m.h}%;">
+          <div class="digital-panel-meter ${themeClass}" id="meter_${m.id}" style="left: ${m.x}%; top: ${m.y}%; width: ${m.w}%; height: ${m.h}%;" title="${m.label}">
+           <div class="dpm-inner">
             <div class="dpm-header">
-              <span class="dpm-title">${m.label}</span>
+              <span class="dpm-title"><span class="t-full">${m.label}</span><span class="t-short">${m.short || m.label}</span></span>
               <span class="dpm-range" id="range_${m.id}">${m.range || ''}</span>
             </div>
             <div class="dpm-body">
               <span class="dpm-num" id="dpm_val_${m.id}">0.00</span>
-              <span class="dpm-unit">${m.unit}</span>
+              <span class="dpm-unit" id="dpm_unit_${m.id}">${m.unit}</span>
             </div>
             <div class="dpm-footer">
               <div class="dpm-bar-track">
                 <div class="dpm-bar-fill" id="dpm_bar_${m.id}" style="width: 0%;"></div>
               </div>
               <div class="dpm-ticks">
-                ${m.isBipolar ? '<span>-F.S.</span><span>0</span><span>+F.S.</span>' : '<span>0</span><span>50%</span><span>F.S.</span>'}
+                ${m.isBipolar ? '<span>−F.S.</span><span>0</span><span>+F.S.</span>' : '<span>0</span><span>50%</span><span>F.S.</span>'}
               </div>
             </div>
+           </div>
           </div>
         `;
       } else if (m.type === 'analog' || m.type === 'center_zero') {
@@ -225,170 +233,144 @@ export class ModuleRenderer {
   }
 
   /**
-   * 이벤트 바인딩 (노브, 스위치, 단자)
+   * 이벤트 바인딩 (노브, 스위치, 단자, 램프 소켓)
    */
   attachEvents(workbenchEl) {
-    // 1. 단자 클릭/드래그
+    // 1. 단자 클릭 → 배선
     workbenchEl.addEventListener('click', (e) => {
       const jack = e.target.closest('.terminal-jack');
       if (jack) {
-        const moduleId = jack.dataset.module;
-        const terminalId = jack.dataset.terminal;
-        this.onTerminalClick(moduleId, terminalId, jack);
+        this.onTerminalClick(jack.dataset.module, jack.dataset.terminal, jack);
       }
     });
 
     // 2. 락커 스위치 (전원 ON/OFF)
     workbenchEl.addEventListener('click', (e) => {
       const sw = e.target.closest('.rocker-switch');
-      if (sw) {
-        const moduleId = sw.dataset.module;
-        const controlId = sw.dataset.control;
-        const curr = this.engine.getControlValue(moduleId, controlId, false);
-        const next = !curr;
-        this.engine.setControlValue(moduleId, controlId, next);
-
-        sw.classList.toggle('sw-on', next);
-        sw.classList.toggle('sw-off', !next);
-
-        if (controlId === 'MAIN_POWER_SW') {
-          this.engine.state.powerSupplyOn = next;
-          this.engine.solve();
-          if (this.onControlChange) this.onControlChange(moduleId, controlId, next);
-        } else if (controlId === 'MOTOR_POWER') {
-          this.engine.state.autoDriverOn = next;
-          if (!next) {
-            this.engine.state.autoDriverRpm = 0;
-          }
-          this.engine.solve();
-          if (this.onControlChange) this.onControlChange(moduleId, controlId, next);
-        }
+      if (!sw) return;
+      const moduleId = sw.dataset.module;
+      const controlId = sw.dataset.control;
+      const next = !this.engine.getControlValue(moduleId, controlId, false);
+      this.engine.setControlValue(moduleId, controlId, next, true);
+      sw.classList.toggle('sw-on', next);
+      sw.classList.toggle('sw-off', !next);
+      if (controlId === 'MAIN_POWER_SW') {
+        this.engine.state.powerSupplyOn = next;
+        if (next) { this.engine.state.shortCircuit = false; this.engine.state.shortDetails = ''; }
+      } else if (controlId === 'MOTOR_POWER') {
+        this.engine.state.autoDriverOn = next;
       }
+      this.engine.solve();
+      if (this.onControlChange) this.onControlChange(moduleId, controlId, next);
     });
 
     // 3. 토글 스위치 (05번 RLC 부하)
     workbenchEl.addEventListener('click', (e) => {
       const tsw = e.target.closest('.toggle-switch-wrapper');
-      if (tsw) {
-        const moduleId = tsw.dataset.module;
-        const switchId = tsw.dataset.switch;
-        const curr = this.engine.getControlValue(moduleId, switchId, false);
-        const next = !curr;
-        this.engine.setControlValue(moduleId, switchId, next);
-
-        tsw.classList.toggle('sw-up', next);
-        tsw.classList.toggle('sw-down', !next);
-        this.engine.solve();
-        if (this.onControlChange) this.onControlChange(moduleId, switchId, next);
-      }
+      if (!tsw) return;
+      const moduleId = tsw.dataset.module;
+      const switchId = tsw.dataset.switch;
+      const next = !this.engine.getControlValue(moduleId, switchId, false);
+      this.engine.setControlValue(moduleId, switchId, next);
+      tsw.classList.toggle('sw-up', next);
+      tsw.classList.toggle('sw-down', !next);
+      tsw.title = tsw.title.replace(/\((ON|OFF)\)/, `(${next ? 'ON' : 'OFF'})`);
+      if (this.onControlChange) this.onControlChange(moduleId, switchId, next);
     });
 
-    // 4. 로터리/캠 스위치 (3-pos)
+    // 4. 로터리/캠 스위치 (3-pos): 클릭할 때마다 한 칸씩 (예: CCW → STOP → CW)
     workbenchEl.addEventListener('click', (e) => {
       const rsw = e.target.closest('.rotary-handle');
-      if (rsw) {
-        const moduleId = rsw.dataset.module;
-        const controlId = rsw.dataset.control;
-        const options = JSON.parse(rsw.dataset.options);
-        let currIdx = parseInt(rsw.dataset.currIdx, 10);
-        currIdx = (currIdx + 1) % options.length;
-        rsw.dataset.currIdx = currIdx;
+      if (!rsw) return;
+      const moduleId = rsw.dataset.module;
+      const controlId = rsw.dataset.control;
+      const options = JSON.parse(rsw.dataset.options);
+      const currIdx = (parseInt(rsw.dataset.currIdx, 10) + 1) % options.length;
+      rsw.dataset.currIdx = currIdx;
+      const opt = options[currIdx];
+      rsw.style.transform = `rotate(${opt.angle}deg)`;
+      rsw.title = `${opt.label} (클릭하여 전환)`;
+      this.engine.setControlValue(moduleId, controlId + '_idx', currIdx, true);
 
-        const opt = options[currIdx];
-        rsw.style.transform = `rotate(${opt.angle}deg)`;
-        this.engine.setControlValue(moduleId, controlId, opt.value);
-        this.engine.setControlValue(moduleId, controlId + '_idx', currIdx);
-
-        if (controlId === 'MOTOR_DIR') {
-          this.engine.state.autoDriverDir = opt.value;
-          if (opt.value === 'STOP') {
-            this.engine.state.autoDriverRpm = 0;
-          } else {
-            // 사용자가 CW 또는 CCW 회전 방향을 선택하면 구동 전원도 자동 ON
-            this.engine.state.autoDriverOn = true;
-            this.engine.setControlValue(moduleId, 'MOTOR_POWER', true);
-            const pwr = workbenchEl.querySelector(`[data-module="${moduleId}"][data-control="MOTOR_POWER"]`);
-            if (pwr) {
-              pwr.classList.add('sw-on');
-              pwr.classList.remove('sw-off');
-            }
-          }
-          this.engine.solve();
-          if (this.onControlChange) this.onControlChange(moduleId, controlId, opt.value);
-        } else if (controlId === 'RANGE_SEL') {
-          this.engine.solve();
-          if (this.onControlChange) this.onControlChange(moduleId, controlId, opt.value);
+      if (controlId === 'MOTOR_DIR') {
+        this.engine.state.autoDriverDir = opt.value;
+        if (opt.value !== 'STOP') {
+          // 방향 선택 시 구동 전원 자동 ON
+          this.engine.state.autoDriverOn = true;
+          this.engine.setControlValue(moduleId, 'MOTOR_POWER', true, true);
+          const pwr = workbenchEl.querySelector(`[data-module="${moduleId}"][data-control="MOTOR_POWER"]`);
+          if (pwr) { pwr.classList.add('sw-on'); pwr.classList.remove('sw-off'); }
         }
       }
-
+      this.engine.setControlValue(moduleId, controlId, opt.value);
+      if (this.onControlChange) this.onControlChange(moduleId, controlId, opt.value);
     });
 
-    // 5. 노브 마우스 원형 회전 드래그 & 마우스 휠
-    workbenchEl.addEventListener('mousedown', (e) => {
-      const knob = e.target.closest('.knob-body');
-      if (knob) {
-        const rect = knob.getBoundingClientRect();
-        const cx = rect.left + rect.width / 2;
-        const cy = rect.top + rect.height / 2;
-        const startAngle = Math.atan2(e.clientY - cy, e.clientX - cx);
-
-        this.activeDragKnob = {
-          el: knob,
-          cx,
-          cy,
-          lastAngle: startAngle,
-          lastY: e.clientY,
-          startVal: parseFloat(this.engine.getControlValue(knob.dataset.module, knob.dataset.control, 0)),
-          currVal: parseFloat(this.engine.getControlValue(knob.dataset.module, knob.dataset.control, 0)),
-          min: parseFloat(knob.dataset.min),
-          max: parseFloat(knob.dataset.max),
-          step: parseFloat(knob.dataset.step)
-        };
-        e.preventDefault();
-      }
+    // 5. 램프 소켓: 전구 장착/분리
+    workbenchEl.addEventListener('click', (e) => {
+      const sock = e.target.closest('.lamp-socket');
+      if (!sock) return;
+      const moduleId = sock.dataset.module;
+      const lampId = sock.dataset.lamp;
+      const next = !this.engine.getControlValue(moduleId, `BULB_${lampId}`, true);
+      this.engine.setControlValue(moduleId, `BULB_${lampId}`, next);
+      sock.classList.toggle('bulb-removed', !next);
+      if (this.onControlChange) this.onControlChange(moduleId, `BULB_${lampId}`, next);
     });
 
-    window.addEventListener('mousemove', (e) => {
+    // 6. 노브 드래그 (원형 회전 + 수직 드래그 보조)
+    const startDrag = (knob, clientX, clientY) => {
+      const rect = knob.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const v = parseFloat(this.engine.getControlValue(knob.dataset.module, knob.dataset.control, 0));
+      this.activeDragKnob = {
+        el: knob, cx, cy,
+        lastAngle: Math.atan2(clientY - cy, clientX - cx),
+        lastY: clientY,
+        currVal: v,
+        min: parseFloat(knob.dataset.min),
+        max: parseFloat(knob.dataset.max),
+        step: parseFloat(knob.dataset.step)
+      };
+    };
+    const moveDrag = (clientX, clientY) => {
       if (!this.activeDragKnob) return;
       const { el, cx, cy, min, max, step } = this.activeDragKnob;
-
-      // 1. 노브 중심 기준 마우스 원형 각도 회전 계산
-      const currentAngle = Math.atan2(e.clientY - cy, e.clientX - cx);
+      const currentAngle = Math.atan2(clientY - cy, clientX - cx);
       let diffAngle = currentAngle - this.activeDragKnob.lastAngle;
-      // 각도 wrapping 처리 (-PI ~ +PI)
       if (diffAngle > Math.PI) diffAngle -= 2 * Math.PI;
       if (diffAngle < -Math.PI) diffAngle += 2 * Math.PI;
       this.activeDragKnob.lastAngle = currentAngle;
-
-      // 2. 수직 드래그 보조 성분 계산
-      const dy = this.activeDragKnob.lastY - e.clientY;
-      this.activeDragKnob.lastY = e.clientY;
-
+      const dy = this.activeDragKnob.lastY - clientY;
+      this.activeDragKnob.lastY = clientY;
       const range = max - min;
-      // 270도 (약 1.5*PI 라디안) 회전 = 전체 가변 범위
-      let valDelta = (diffAngle / (1.5 * Math.PI)) * range;
-
-      // 만약 각도 변화가 거의 없고 수직 직선 드래그만 일어난 경우 보조 지원
-      if (Math.abs(diffAngle) < 0.005 && Math.abs(dy) > 1) {
-        valDelta = (dy / 180) * range;
-      }
-
-      let nextVal = this.activeDragKnob.currVal + valDelta;
-      nextVal = Math.max(min, Math.min(max, nextVal));
+      let valDelta = (diffAngle / (1.5 * Math.PI)) * range;   // 270° = 전 범위
+      if (Math.abs(diffAngle) < 0.005 && Math.abs(dy) > 1) valDelta = (dy / 180) * range;
+      let nextVal = Math.max(min, Math.min(max, this.activeDragKnob.currVal + valDelta));
       this.activeDragKnob.currVal = nextVal;
-
-      let snappedVal = Math.round((nextVal - min) / step) * step + min;
-      snappedVal = Math.max(min, Math.min(max, snappedVal));
-      if (step < 1) snappedVal = parseFloat(snappedVal.toFixed(2));
-
-      this.updateKnobUI(el, snappedVal, min, max);
+      let snapped = Math.round((nextVal - min) / step) * step + min;
+      snapped = Math.max(min, Math.min(max, snapped));
+      if (step < 1) snapped = parseFloat(snapped.toFixed(2));
+      if (snapped !== parseFloat(this.engine.getControlValue(el.dataset.module, el.dataset.control, 0))) {
+        this.updateKnobUI(el, snapped, min, max);
+      }
+    };
+    workbenchEl.addEventListener('mousedown', (e) => {
+      const knob = e.target.closest('.knob-body');
+      if (knob) { startDrag(knob, e.clientX, e.clientY); e.preventDefault(); }
     });
+    window.addEventListener('mousemove', (e) => moveDrag(e.clientX, e.clientY));
+    window.addEventListener('mouseup', () => { this.activeDragKnob = null; });
+    // 터치 지원 (태블릿 실습)
+    workbenchEl.addEventListener('touchstart', (e) => {
+      const knob = e.target.closest('.knob-body');
+      if (knob && e.touches[0]) { startDrag(knob, e.touches[0].clientX, e.touches[0].clientY); e.preventDefault(); }
+    }, { passive: false });
+    window.addEventListener('touchmove', (e) => { if (this.activeDragKnob && e.touches[0]) { moveDrag(e.touches[0].clientX, e.touches[0].clientY); e.preventDefault(); } }, { passive: false });
+    window.addEventListener('touchend', () => { this.activeDragKnob = null; });
 
-    window.addEventListener('mouseup', () => {
-      this.activeDragKnob = null;
-    });
-
-    // 휠 스크롤 조절
+    // 7. 휠 조절 (노브) / 계철 프레임 회전자 손으로 돌리기
     workbenchEl.addEventListener('wheel', (e) => {
       const knob = e.target.closest('.knob-body');
       if (knob) {
@@ -398,19 +380,16 @@ export class ModuleRenderer {
         const step = parseFloat(knob.dataset.step);
         const currVal = parseFloat(this.engine.getControlValue(knob.dataset.module, knob.dataset.control, 0));
         const delta = e.deltaY < 0 ? step : -step;
-        const newVal = Math.max(min, Math.min(max, currVal + delta));
-
+        const newVal = parseFloat(Math.max(min, Math.min(max, currVal + delta)).toFixed(2));
         this.updateKnobUI(knob, newVal, min, max);
         return;
       }
-
-      // 계철 프레임 회전자 휠 스크롤 회전 (손으로 돌리는 감각)
-      const frameAssembly = e.target.closest('#field_frame_assembly');
-      if (frameAssembly && !this.engine.modules.has('IEG-6030-11')) {
+      const frameAssembly = e.target.closest('.rack-module[data-module-id="IEG-6030-10"]');
+      if (frameAssembly && !this.engine.hasModule('IEG-6030-11') && (this.engine.assembly.machine || {}).manual) {
         e.preventDefault();
-        this.engine.state.manualRpm = 320;
+        this.engine.state.continuousSpin = false;
+        this.engine.state.manualRpm = Math.min(400, Math.max(this.engine.state.manualRpm, 0) + 60);
         this.engine.state.manualDir = (e.deltaY < 0 ? 'CW' : 'CCW');
-        this.engine.solve();
       }
     }, { passive: false });
   }
@@ -419,155 +398,131 @@ export class ModuleRenderer {
     const moduleId = knobEl.dataset.module;
     const controlId = knobEl.dataset.control;
     this.engine.setControlValue(moduleId, controlId, newVal);
-
     const ratio = (newVal - min) / (max - min);
-    const angle = -135 + ratio * 270;
-    knobEl.style.transform = `rotate(${angle}deg)`;
-
+    knobEl.style.transform = `rotate(${-135 + ratio * 270}deg)`;
     const bubble = document.getElementById(`val_${moduleId}_${controlId}`);
-    if (bubble) {
-      bubble.textContent = `${newVal}`;
-    }
-
-    if (controlId === 'SPEED_KNOB' || controlId === 'MOTOR_SPEED') {
-      this.engine.state.targetRpm = newVal;
-    }
-    // 저항값(계자, 기동), 속도 등 모든 노브 값 변경 시 즉각 회로 물리 재해석 수행
-    this.engine.solve();
-
-    if (this.onControlChange) {
-      this.onControlChange(moduleId, controlId, newVal);
-    }
+    if (bubble) bubble.textContent = `${newVal} ${bubble.dataset.unit || ''}`;
+    if (this.onControlChange) this.onControlChange(moduleId, controlId, newVal);
   }
 
   /**
-   * 실기기 스위치 및 로터리 핸들 UI 상태를 엔진 상태와 동기화
+   * 모든 조작부(노브·스위치·로터리·램프) UI를 엔진 상태와 동기화
    */
   syncSwitchesUI() {
-    // 1. 06번 주전원 스위치
-    const psuSw = this.container.querySelector('[data-module="IEG-6030-06"][data-control="MAIN_POWER_SW"]');
-    if (psuSw) {
-      const on = !!this.engine.state.powerSupplyOn;
-      psuSw.classList.toggle('sw-on', on);
-      psuSw.classList.toggle('sw-off', !on);
-    }
+    const root = this.container;
+    root.querySelectorAll('.rocker-switch').forEach(sw => {
+      let on = !!this.engine.getControlValue(sw.dataset.module, sw.dataset.control, false);
+      if (sw.dataset.control === 'MAIN_POWER_SW') on = on && !!this.engine.state.powerSupplyOn;
+      if (sw.dataset.control === 'MOTOR_POWER') on = on && !!this.engine.state.autoDriverOn;
+      sw.classList.toggle('sw-on', on);
+      sw.classList.toggle('sw-off', !on);
+    });
+    root.querySelectorAll('.rotary-handle').forEach(h => {
+      const options = JSON.parse(h.dataset.options);
+      let idx = this.engine.getControlValue(h.dataset.module, h.dataset.control + '_idx', 1);
+      if (h.dataset.control === 'MOTOR_DIR') {
+        const dir = this.engine.state.autoDriverDir || 'STOP';
+        idx = dir === 'CW' ? 2 : (dir === 'CCW' ? 0 : 1);
+      }
+      idx = Math.max(0, Math.min(options.length - 1, idx));
+      h.dataset.currIdx = idx;
+      h.style.transform = `rotate(${options[idx].angle}deg)`;
+      h.title = `${options[idx].label} (클릭하여 전환)`;
+    });
+    root.querySelectorAll('.knob-body').forEach(k => {
+      const min = parseFloat(k.dataset.min), max = parseFloat(k.dataset.max);
+      const v = parseFloat(this.engine.getControlValue(k.dataset.module, k.dataset.control, min));
+      k.style.transform = `rotate(${-135 + ((v - min) / (max - min)) * 270}deg)`;
+      const bubble = document.getElementById(`val_${k.dataset.module}_${k.dataset.control}`);
+      if (bubble) bubble.textContent = `${v} ${bubble.dataset.unit || ''}`;
+    });
+    root.querySelectorAll('.toggle-switch-wrapper').forEach(t => {
+      const on = !!this.engine.getControlValue(t.dataset.module, t.dataset.switch, false);
+      t.classList.toggle('sw-up', on);
+      t.classList.toggle('sw-down', !on);
+    });
+    root.querySelectorAll('.lamp-socket').forEach(l => {
+      const on = !!this.engine.getControlValue(l.dataset.module, `BULB_${l.dataset.lamp}`, true);
+      l.classList.toggle('bulb-removed', !on);
+    });
+  }
 
-    // 2. 11번 구동 모터 전원 스위치
-    const motPwr = this.container.querySelector('[data-module="IEG-6030-11"][data-control="MOTOR_POWER"]');
-    if (motPwr) {
-      const on = !!this.engine.state.autoDriverOn;
-      motPwr.classList.toggle('sw-on', on);
-      motPwr.classList.toggle('sw-off', !on);
-    }
-
-    // 3. 11번 구동 모터 방향 로터리 스위치
-    const dirSw = this.container.querySelector('[data-module="IEG-6030-11"][data-control="MOTOR_DIR"]');
-    if (dirSw) {
-      const dir = this.engine.state.autoDriverDir || 'STOP';
-      let angle = 0;
-      let idx = 1;
-      if (dir === 'CW') { angle = 45; idx = 2; }
-      else if (dir === 'CCW') { angle = -45; idx = 0; }
-      dirSw.dataset.currIdx = idx;
-      dirSw.style.transform = `rotate(${angle}deg)`;
-    }
-
-    // 4. 11번 속도 노브
-    const speedKnob = this.container.querySelector('[data-module="IEG-6030-11"][data-control="MOTOR_SPEED"]') ||
-                      this.container.querySelector('[data-module="IEG-6030-11"][data-control="SPEED_KNOB"]');
-    if (speedKnob) {
-      const rpm = this.engine.state.targetRpm || 1800;
-      const ratio = rpm / 3500;
-      const angle = -135 + ratio * 270;
-      speedKnob.style.transform = `rotate(${angle}deg)`;
-      const bubble = document.getElementById('val_IEG-6030-11_MOTOR_SPEED') ||
-                     document.getElementById('val_IEG-6030-11_SPEED_KNOB');
-      if (bubble) bubble.textContent = `${rpm} RPM`;
-    }
+  /** 디지털 패널메타 표시 문자열 (레인지에 맞춘 자릿수, 극성, 과부하 OL) */
+  formatReading(id, r) {
+    let v = r.display;
+    let unit = r.unit;
+    let fs = r.fs;
+    if (r.ol) return { text: (r.value < 0 ? '−OL' : 'OL'), unit, ol: true };
+    if (unit === 'A' && fs <= 0.1) { v *= 1000; unit = 'mA'; fs *= 1000; }
+    let dec;
+    if (id === 'M_GALVANO') dec = fs <= 5 ? 2 : (fs <= 50 ? 1 : 0);   // ±5mA: 0.00 / ±50mA: 0.0 / ±500mA: 0
+    else if (unit === 'mA') dec = 1;                                   // 100mA 레인지: 00.0 mA
+    else if (unit === 'A') dec = 3;                                    // 1A / 2.5A / 5A: 0.000 A
+    else dec = fs <= 5 ? 3 : 2;                                        // 5V: 0.000 / 10·50·80V: 00.00
+    const eps = 0.5 * Math.pow(10, -dec);
+    if (Math.abs(v) < eps) v = 0;
+    let text = Math.abs(v).toFixed(dec);
+    if (v < 0) text = '−' + text;
+    else if (r.bipolar && v > 0) text = '+' + text;
+    return { text, unit, ol: false };
   }
 
   /**
-   * 실시간 계측기 바늘 각도 및 디지털 미터 텍스트 갱신
+   * 실시간 계측기 표시 갱신 (디지털 패널메타, RPM 미터, 램프)
    */
   updateMetersUI() {
-    for (const [mId, meter] of this.engine.meterPhysics.meters.entries()) {
+    for (const [mId, r] of Object.entries(this.engine.readings)) {
       const el = document.getElementById(`meter_${mId}`);
-      if (el) {
-        // 1. 디지털 패널 메타 (Digital Panel Meter) 실시간 수치 및 바 그래프 갱신
-        const dpmNum = el.querySelector('.dpm-num');
-        const dpmBar = el.querySelector('.dpm-bar-fill');
-        if (dpmNum) {
-          const currVal = this.engine.meterPhysics.getCurrentValue(mId);
-          const absVal = Math.abs(currVal);
-          let formatted;
-          if (mId === 'M_GALVANO') {
-            formatted = (currVal >= 0 ? '+' : '') + currVal.toFixed(1);
-          } else if (mId === 'M_DC_A' || mId === 'M_AC_A') {
-            formatted = (absVal < 0.0005 ? 0 : currVal).toFixed(3);
-          } else {
-            formatted = (absVal < 0.005 ? 0 : currVal).toFixed(2);
-          }
-          dpmNum.textContent = formatted;
-
-          if (dpmBar) {
-            if (mId === 'M_GALVANO') {
-              // Center-Zero 바이폴라: 중앙이 0, 좌우 50% 분기
-              const fullScale = Math.abs(meter.maxVal || 50);
-              const span = Math.min(50, (absVal / fullScale) * 50);
-              if (currVal >= 0) {
-                dpmBar.style.left = '50%';
-                dpmBar.style.width = `${span}%`;
-              } else {
-                dpmBar.style.left = `${50 - span}%`;
-                dpmBar.style.width = `${span}%`;
-              }
-              const rangeEl = el.querySelector('.dpm-range');
-              if (rangeEl) rangeEl.textContent = `±${fullScale}mA`;
-            } else {
-              const maxV = meter.maxVal || 50;
-              const pct = Math.min(100, Math.max(0, (absVal / maxV) * 100));
-              dpmBar.style.left = '0%';
-              dpmBar.style.width = `${pct}%`;
-            }
-          }
-        }
-
-        // 2. 아날로그 바늘 피벗 (기존 아날로그 메타 호환)
-        const pivot = el.querySelector('.needle-pivot');
-        if (pivot) {
-          const angle = meter.currentAngle;
-          const px = pivot.getAttribute('data-px') || '50';
-          const py = pivot.getAttribute('data-py') || '78';
-          pivot.setAttribute('transform', `translate(${px}, ${py}) rotate(${angle.toFixed(2)})`);
+      if (!el) continue;
+      const numEl = el.querySelector('.dpm-num');
+      if (!numEl) continue;
+      const f = this.formatReading(mId, r);
+      if (numEl.textContent !== f.text) numEl.textContent = f.text;
+      const unitEl = el.querySelector('.dpm-unit');
+      if (unitEl && unitEl.textContent !== f.unit) unitEl.textContent = f.unit;
+      el.classList.toggle('dpm-overload', f.ol);
+      el.classList.toggle('dpm-inactive', !r.active);
+      const rangeEl = el.querySelector('.dpm-range');
+      if (rangeEl && r.rangeLabel && rangeEl.textContent !== r.rangeLabel) rangeEl.textContent = r.rangeLabel;
+      const bar = el.querySelector('.dpm-bar-fill');
+      if (bar) {
+        const ratio = Math.min(1, Math.abs(r.display) / (r.fs || 1));
+        if (r.bipolar) {
+          const span = ratio * 50;
+          bar.style.left = r.display >= 0 ? '50%' : `${50 - span}%`;
+          bar.style.width = `${span}%`;
+        } else {
+          bar.style.left = '0%';
+          bar.style.width = `${ratio * 100}%`;
         }
       }
     }
 
-    // 디지털 RPM 미터
+    // 구동 전동기 RPM 미터 (모듈 11 자체 표시)
     const rpmMeter = document.getElementById('meter_M_RPM');
     if (rpmMeter) {
       const valEl = rpmMeter.querySelector('.digi-val');
-      if (valEl) {
-        const rpm = Math.round(this.engine.state.autoDriverRpm);
-        valEl.textContent = Math.abs(rpm).toString().padStart(4, '0');
-      }
+      const txt = Math.round(Math.abs(this.engine.state.autoDriverRpm)).toString().padStart(4, '0');
+      if (valEl && valEl.textContent !== txt) valEl.textContent = txt;
     }
 
-    // 램프 밝기
-    for (const [lId, ratio] of Object.entries(this.engine.state.lampBrightness)) {
-      const lEl = document.getElementById(`lamp_IEG-6030-03_${lId}`) || document.getElementById(`lamp_IEG-6030-04_${lId}`);
-      if (lEl) {
-        const glow = lEl.querySelector('.lamp-glow');
-        const fil = lEl.querySelector('.lamp-filament');
-        if (glow) {
-          glow.style.opacity = (ratio * 0.9).toFixed(2);
-          glow.style.transform = `scale(${0.7 + ratio * 0.8})`;
-        }
-        if (fil) {
-          fil.style.backgroundColor = ratio > 0.1 ? '#fffae0' : '#444';
-          fil.style.boxShadow = ratio > 0.1 ? `0 0 ${10 * ratio}px #ffb703` : 'none';
-        }
+    // 램프 밝기 (-1 = 전구 없음)
+    for (const [key, ratio] of Object.entries(this.engine.state.lampBrightness || {})) {
+      const [modId, lId] = key.split(':');
+      const lEl = document.getElementById(`lamp_${modId}_${lId}`);
+      if (!lEl) continue;
+      const glow = lEl.querySelector('.lamp-glow');
+      const fil = lEl.querySelector('.lamp-filament');
+      const b = Math.max(0, ratio);
+      if (glow) {
+        glow.style.opacity = (b * 0.9).toFixed(2);
+        glow.style.transform = `scale(${(0.7 + b * 0.8).toFixed(2)})`;
       }
+      if (fil) {
+        fil.style.backgroundColor = b > 0.05 ? '#fffae0' : '#444';
+        fil.style.boxShadow = b > 0.05 ? `0 0 ${(10 * b).toFixed(1)}px #ffb703` : 'none';
+      }
+      lEl.classList.toggle('lamp-over', !!(this.engine.state.lampOver || {})[key]);
     }
   }
 }

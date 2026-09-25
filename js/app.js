@@ -14,6 +14,7 @@ import { EXPERIMENTS_DATA } from './curriculum/experiments_data.js';
 import { EvaluationEngine } from './curriculum/evaluation_engine.js';
 import { ReportGenerator } from './curriculum/report_generator.js';
 import { FULL_MANUAL } from './curriculum/full_manual_data.js';
+import { GENERATOR_TYPES } from './engine/circuit.js';
 
 class SimulatorApp {
   constructor() {
@@ -28,11 +29,14 @@ class SimulatorApp {
     this.currentManualSectionId = 'chap_1_all';
     this.manualSearchTerm = '';
 
+    // 실습 데이터 사본 (세션 중 구동 전동기 추가 등으로 수정될 수 있음)
+    this.experiments = JSON.parse(JSON.stringify(EXPERIMENTS_DATA));
+
     // 엔진 초기화
     this.engine = new CircuitEngine(MODULE_DEFS);
     this.router = new CableRouter();
     this.assembler = new MachineAssembler(this.engine, () => this.onAssemblyUpdated());
-    this.evaluator = new EvaluationEngine(this.engine, EXPERIMENTS_DATA);
+    this.evaluator = new EvaluationEngine(this.engine, this.experiments);
     this.reportGen = new ReportGenerator(this.engine);
 
     // DOM 요소
@@ -141,6 +145,7 @@ class SimulatorApp {
    */
   setupToolbar() {
     // 실습 선택 드롭다운 (25개 실습: 발전기 13종 + 전동기 12종)
+
     const expSelect = document.getElementById('exp_select');
     if (expSelect) {
       expSelect.innerHTML = '';
@@ -149,7 +154,7 @@ class SimulatorApp {
       const motGroup = document.createElement('optgroup');
       motGroup.label = '🔄 [제6장] 전동기의 기본 실습 (12개 과정)';
 
-      EXPERIMENTS_DATA.forEach(exp => {
+      this.experiments.forEach(exp => {
         const opt = document.createElement('option');
         opt.value = exp.id;
         opt.textContent = `${exp.title}`;
@@ -181,7 +186,7 @@ class SimulatorApp {
     const autoWireBtn = document.getElementById('btn_auto_wire');
     if (autoWireBtn) {
       autoWireBtn.addEventListener('click', () => {
-        const exp = EXPERIMENTS_DATA.find(e => e.id === this.currentExpId);
+        const exp = this.getExp(this.currentExpId);
         if (exp && exp.targetWires) {
           this.engine.clearWires();
           exp.targetWires.forEach(w => {
@@ -197,7 +202,7 @@ class SimulatorApp {
     const btnRun = document.getElementById('btn_run');
     if (btnRun) {
       btnRun.addEventListener('click', () => {
-        this.startSimulation(1800, 'CW');
+        this.startSimulation(null, 'CW');
       });
     }
 
@@ -216,7 +221,7 @@ class SimulatorApp {
         if (this.engine.isRunning()) {
           this.stopSimulation();
         } else {
-          this.startSimulation(1800, 'CW');
+          this.startSimulation(null, 'CW');
         }
       });
     }
@@ -280,6 +285,18 @@ class SimulatorApp {
       }
     });
 
+    // 장비 확대 보기 (좌·우 패널 접기) — 화면이 좁을 때 모듈·메터가 작아지는 문제 완화
+    const focusBtn = document.getElementById('btn_focus_rack');
+    const toggleFocus = (force) => {
+      const on = document.body.classList.toggle('focus-rack', force);
+      if (focusBtn) { focusBtn.classList.toggle('active', on); focusBtn.textContent = on ? '⛶ 패널 보이기' : '⛶ 장비 확대'; }
+      setTimeout(() => { this.fitRackToScreen(); this.scope.initCanvas(); }, 30);
+    };
+    if (focusBtn) focusBtn.addEventListener('click', () => toggleFocus());
+    window.addEventListener('keydown', (e) => {
+      if ((e.key === 'f' || e.key === 'F') && !['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName) && this.currentTab === 'workbench') toggleFocus();
+    });
+
     // 툴바 데이터 내보내기 버튼 (CSV, XLSX, PDF)
     const btnExportCsv = document.getElementById('btn_export_csv');
     if (btnExportCsv) {
@@ -299,7 +316,7 @@ class SimulatorApp {
    * 실시간 계측값 1클릭 기록 처리
    */
   handleRecordMeasurement() {
-    const curExp = EXPERIMENTS[this.currentExpId];
+    const curExp = this.getExp(this.currentExpId);
     const labTitle = curExp ? curExp.title : this.currentExpId;
     const pt = this.reportGen.recordCurrentPoint(labTitle);
 
@@ -310,7 +327,7 @@ class SimulatorApp {
     }
 
     this.renderLiveMeasurementTable(pt.id);
-    this.showToast(`📥 [계측 #${pt.id}] ${pt.rpm} RPM | ${pt.vTerm} V | ${pt.iLoad} A 기록 완료`);
+    this.showToast(`📥 [계측 #${pt.id}] ${pt.rpm} RPM | ${pt.vTerm} V | ${pt.iLoad} A | If ${pt.iField} mA 기록 완료`);
   }
 
   /**
@@ -322,7 +339,7 @@ class SimulatorApp {
     const badge2 = document.getElementById('drawer_record_count_badge');
 
     const count = this.reportGen.recordedData.length;
-    if (badge1) badge1.textContent = `${count}건`;
+    if (badge1) badge1.textContent = `${count}`;
     if (badge2) badge2.textContent = `${count}건 기록됨`;
 
     if (!tbody) return;
@@ -452,8 +469,8 @@ class SimulatorApp {
 
     const gapCount = Math.max(0, modules.length - 1);
     const gapsWidth = gapCount * 12; // gap: 12px
-    const rackFramePaddingX = 32; // rack padding 14px * 2 + border 4px
-    const rackFramePaddingY = 56; // rack padding 20px * 2 + border 4px + duct
+    const rackFramePaddingX = 36; // rack padding 14px * 2 + border 4px * 2
+    const rackFramePaddingY = 64; // rack padding 28px * 2 + border 4px * 2 (상/하단 케이블 덕트 포함)
     const wrapPaddingX = 40; // wrap padding 20px * 2
     const wrapPaddingY = 32; // wrap padding 16px * 2
 
@@ -473,16 +490,17 @@ class SimulatorApp {
   setRackHeight(newHeight) {
     this.currentRackHeight = Math.max(120, Math.min(650, newHeight));
     document.documentElement.style.setProperty('--rack-height', `${this.currentRackHeight}px`);
-
-    this.cableUI.render();
     this.onAssemblyUpdated();
+    // 레이아웃 반영 후 배선 좌표 재계산
+    requestAnimationFrame(() => this.cableUI.render());
   }
 
   /**
    * 시뮬레이터 운전 가동 (RUN)
    */
-  startSimulation(rpm = 1800, dir = 'CW') {
+  startSimulation(rpm = null, dir = 'CW') {
     this.engine.startRun(rpm, dir);
+    this.resetContinuousSpinButton(!!this.engine.state.continuousSpin);
     this.moduleRenderer.syncSwitchesUI();
     this.updateRunControls();
     this.cableUI.render();
@@ -494,6 +512,7 @@ class SimulatorApp {
    */
   stopSimulation() {
     this.engine.stopRun();
+    this.resetContinuousSpinButton(false);
     this.moduleRenderer.syncSwitchesUI();
     this.updateRunControls();
     this.cableUI.render();
@@ -513,8 +532,8 @@ class SimulatorApp {
    * 상단 RUN / STOP 버튼 및 상태 뱃지 시각 동기화
    */
   updateRunControls() {
-    const isRunning = this.engine.isRunning();
-    const curRpm = Math.round(Math.abs(this.engine.state.autoDriverRpm || this.engine.state.rotorRpm || 0));
+    const isRunning = this.engine.isRunning() || this.engine.state.powerSupplyOn;
+    const curRpm = Math.round(Math.abs(this.engine.state.rotorRpm || this.engine.state.autoDriverRpm || 0));
 
     const btnRun = document.getElementById('btn_run');
     const btnStop = document.getElementById('btn_stop');
@@ -531,7 +550,7 @@ class SimulatorApp {
       statusBadge.className = `run-status-badge ${isRunning ? 'running' : 'stopped'}`;
       const txt = statusBadge.querySelector('.status-text');
       if (txt) {
-        txt.textContent = isRunning ? `RUNNING (${curRpm > 0 ? curRpm : (this.engine.state.targetRpm || 1800)} RPM)` : 'STOPPED';
+        txt.textContent = isRunning ? `RUNNING (${curRpm} RPM)` : 'STOPPED';
       }
     }
 
@@ -546,44 +565,57 @@ class SimulatorApp {
   /**
    * 실습 로드 (모듈 랙 배치 및 조립 프리셋)
    */
+  getExp(expId) {
+    return this.experiments.find(e => e.id === expId);
+  }
+
   loadExperiment(expId) {
-    // 실습 전환 시 안전을 위해 먼저 정지
-    this.stopSimulation();
-
-    this.currentExpId = expId;
-    const exp = EXPERIMENTS_DATA.find(e => e.id === expId);
+    const exp = this.getExp(expId);
     if (!exp) return;
+    this.currentExpId = expId;
+    this.cableUI.cancelConnecting();
+    this.cableUI.selectedWireId = null;
 
-    // 1. 랙 모듈 렌더링
+    // 1. 엔진 초기화: 랙 구성, 기기 모델, 조작 초기값
+    this.engine.wires = [];
+    this.engine.resetControls();
+    this.engine.setRackModules(exp.modules);
+    this.engine.assembly.machine = (exp.assemblyConfig && exp.assemblyConfig.machine) || null;
+    this.engine.assembly.requiredRotor = exp.assemblyConfig ? exp.assemblyConfig.rotor : null;
+    for (const [modId, ctrls] of Object.entries(exp.presets || {})) {
+      for (const [cid, val] of Object.entries(ctrls)) this.engine.setControlValue(modId, cid, val, true);
+    }
+    this.engine.state.targetRpm = this.engine.getControlValue('IEG-6030-11', 'MOTOR_SPEED', 1800);
+    this.engine.state.galvPeak = 0;
+    this.engine.hardReset();
+
+    // 2. 랙 모듈 렌더링
     let rackHtml = `
       <div class="rack-cable-duct top">▲ CABLE TROUGH / WIRE DUCT (UPPER) ▲</div>
       <div class="rack-cable-duct bottom">▼ CABLE TROUGH / WIRE DUCT (LOWER) ▼</div>
     `;
-
     exp.modules.forEach((mId, slotIdx) => {
       rackHtml += this.moduleRenderer.renderModule(mId, slotIdx);
     });
-
     this.rackEl.innerHTML = rackHtml;
 
-    // 2. 기계 조립 상태 프리셋 적용
+    // 3. 기계 조립 상태 프리셋
     if (exp.assemblyConfig) {
       this.assembler.state.rotor = exp.assemblyConfig.rotor;
-      this.assembler.state.poles = { ...exp.assemblyConfig.poles };
-      this.assembler.state.beltInstalled = exp.assemblyConfig.beltInstalled;
+      this.assembler.state.poles = { ...(exp.assemblyConfig.poles || {}) };
+      this.assembler.state.beltInstalled = !!exp.assemblyConfig.beltInstalled;
       this.assembler.syncEngine();
     }
 
-    // 3. 사이드바 가이드 텍스트 업데이트
+    // 4. 사이드바 가이드
     this.updateSidebarGuide(exp);
+    this.resetContinuousSpinButton(false);
 
-    // 4. 배선 캔버스 및 하드웨어 스위치 동기화
+    // 5. 스위치 UI 동기화 및 배선 캔버스
+    this.moduleRenderer.syncSwitchesUI();
+    this.updateRunControls();
     setTimeout(() => {
-      this.moduleRenderer.syncSwitchesUI();
-      this.updateRunControls();
-      if (this.isAutoFit) {
-        this.fitRackToScreen();
-      }
+      if (this.isAutoFit) this.fitRackToScreen();
       this.cableUI.render();
       this.onAssemblyUpdated();
     }, 60);
@@ -593,24 +625,19 @@ class SimulatorApp {
    * 현재 실습에 자동 구동 유닛(IEG-6030-11)을 추가하여 자동 회전 구동
    */
   addDriveMotorToCurrentExp() {
-    const exp = EXPERIMENTS_DATA.find(e => e.id === this.currentExpId);
-    if (!exp) return;
-
-    // 이미 있으면 무시
-    if (exp.modules.includes('IEG-6030-11')) return;
-
-    // 11번 모듈 추가 + 벨트 연결 설정
+    const exp = this.getExp(this.currentExpId);
+    if (!exp || exp.modules.includes('IEG-6030-11')) return;
     exp.modules.push('IEG-6030-11');
-    if (exp.assemblyConfig) {
-      exp.assemblyConfig.beltInstalled = true;
-    }
-
-    // 연속 회전 해제
-    this.engine.state.continuousSpin = false;
-    this.engine.state.manualRpm = 0;
-
-    // 실험 재로드
+    if (exp.assemblyConfig) exp.assemblyConfig.beltInstalled = true;
     this.loadExperiment(this.currentExpId);
+    this.showToast('⚡ 구동 전동기(IEG-6030-11)를 추가하고 벨트를 연결했습니다. [RUN]으로 운전하세요.');
+  }
+
+  resetContinuousSpinButton(spinning) {
+    const btn = document.getElementById('btn_continuous_spin');
+    if (!btn) return;
+    btn.textContent = spinning ? '⏩ 회전 중...' : '▶ 연속 회전';
+    btn.style.background = spinning ? '#059669' : '#16a34a';
   }
 
   updateSidebarGuide(exp) {
@@ -634,12 +661,14 @@ class SimulatorApp {
     const beltCheck = document.getElementById('check_belt_installed');
     if (beltCheck) beltCheck.checked = this.assembler.state.beltInstalled;
 
-    // 구동 모터 없는 실습일 때 수동 회전 카드 표시
+    // 수동 회전 실습(구동 전동기 없는 발전기 실습)일 때만 회전자 구동 카드 표시
     const spinCard = document.getElementById('manual_spin_card');
     if (spinCard) {
-      const hasDriveMotor = exp.modules.includes('IEG-6030-11');
-      spinCard.style.display = hasDriveMotor ? 'none' : 'block';
+      const manual = !!(exp.assemblyConfig && exp.assemblyConfig.machine && exp.assemblyConfig.machine.manual);
+      spinCard.style.display = (manual && !exp.modules.includes('IEG-6030-11')) ? 'block' : 'none';
     }
+    const exp2 = document.getElementById('guide_exp_expected');
+    if (exp2) exp2.title = '시뮬레이터 모델로 계산한 이론 기대값';
   }
 
   setupSidebarControls() {
@@ -680,41 +709,27 @@ class SimulatorApp {
     const contStop = document.getElementById('btn_continuous_stop');
     const addDrive = document.getElementById('btn_add_drive_unit');
 
-    if (spinCw) {
-      spinCw.addEventListener('click', () => {
-        this.engine.state.continuousSpin = false;
-        this.engine.state.manualRpm = 300;
-        this.engine.state.manualDir = 'CW';
-        this.engine.solve();
-      });
-    }
-    if (spinCcw) {
-      spinCcw.addEventListener('click', () => {
-        this.engine.state.continuousSpin = false;
-        this.engine.state.manualRpm = 300;
-        this.engine.state.manualDir = 'CCW';
-        this.engine.solve();
-      });
-    }
+    const flick = (dir) => {
+      this.engine.state.continuousSpin = false;
+      this.engine.state.manualRpm = 300;          // 손으로 튕기면 300rpm에서 서서히 감속
+      this.engine.state.manualDir = dir;
+      this.resetContinuousSpinButton(false);
+    };
+    if (spinCw) spinCw.addEventListener('click', () => flick('CW'));
+    if (spinCcw) spinCcw.addEventListener('click', () => flick('CCW'));
     if (contSpin) {
       contSpin.addEventListener('click', () => {
         this.engine.state.continuousSpin = true;
         this.engine.state.manualRpm = 150;
         this.engine.state.manualDir = 'CW';
-        contSpin.textContent = '⏩ 회전 중...';
-        contSpin.style.background = '#059669';
-        this.engine.solve();
+        this.resetContinuousSpinButton(true);
       });
     }
     if (contStop) {
       contStop.addEventListener('click', () => {
         this.engine.state.continuousSpin = false;
         this.engine.state.manualRpm = 0;
-        if (contSpin) {
-          contSpin.textContent = '▶ 연속 회전';
-          contSpin.style.background = '#16a34a';
-        }
-        this.engine.solve();
+        this.resetContinuousSpinButton(false);
       });
     }
     if (addDrive) {
@@ -738,21 +753,38 @@ class SimulatorApp {
 
   updateMonitorDock() {
     const calc = this.engine.state.calculatedValues || {};
-    const vEl = document.getElementById('dock_stat_volt');
-    const iEl = document.getElementById('dock_stat_curr');
-    const rpmEl = document.getElementById('dock_stat_rpm');
-    const ifEl = document.getElementById('dock_stat_ifield');
-    const galvEl = document.getElementById('dock_stat_galv');
-    const freqEl = document.getElementById('dock_stat_freq');
+    const mt = calc.machineType || '';
+    const isGen = GENERATOR_TYPES.has(mt);
+    const set = (id, txt) => { const el = document.getElementById(id); if (el && el.textContent !== txt) el.textContent = txt; };
+    const lab = (id, txt) => { const el = document.getElementById(id); if (el && el.textContent !== txt) el.textContent = txt; };
+    const acOut = !!calc.isAcOutput || ['UNIVERSAL_MOTOR', 'SPLIT_PHASE_MOTOR', 'SHADED_POLE_MOTOR', 'REPULSION_MOTOR'].includes(mt);
 
-    if (vEl) vEl.textContent = `${(calc.genTermVolt || 0).toFixed(1)} V`;
-    if (iEl) iEl.textContent = `${(calc.genLoadCurr || 0).toFixed(2)} A`;
-    if (rpmEl) rpmEl.textContent = `${Math.round(calc.generatorRpm || this.engine.state.autoDriverRpm || 0)} RPM`;
-    if (ifEl) ifEl.textContent = `${((calc.iField || 0) * 1000).toFixed(1)} mA`;
-    if (galvEl) galvEl.textContent = `${(calc.galvanoVal || 0).toFixed(2)} mA`;
-    const rpm = calc.generatorRpm || this.engine.state.autoDriverRpm || 0;
-    const freq = calc.frequency || (rpm > 0 ? (rpm / 60) : 0);
-    if (freqEl) freqEl.textContent = `${freq.toFixed(1)} Hz`;
+    lab('dock_lbl_volt', isGen ? (acOut ? '발전 단자 전압 (실효값):' : '발전 단자 전압 (직류):') : (acOut ? '전동기 인가 전압 (실효값):' : '전기자 전압:'));
+    lab('dock_lbl_curr', isGen ? '부하(전기자) 전류:' : '전동기 전류:');
+    lab('dock_lbl_rpm', isGen ? '발전기 회전 속도:' : '전동기 회전 속도:');
+    lab('dock_lbl_freq', isGen ? '발전 주파수:' : '전원 주파수:');
+
+    const rpm = calc.rotorRpm || 0;
+    const dirTxt = Math.abs(rpm) < 1 ? '' : (rpm < 0 ? ' (CCW)' : ' (CW)');
+    set('dock_stat_volt', `${(calc.genTermVolt || 0).toFixed(2)} V`);
+    set('dock_stat_curr', `${(calc.genLoadCurr || 0).toFixed(3)} A`);
+    set('dock_stat_rpm', `${Math.round(Math.abs(rpm))} RPM${dirTxt}`);
+    set('dock_stat_ifield', `${((calc.iField || 0) * 1000).toFixed(1)} mA`);
+    const g = this.engine.readings.M_GALVANO;
+    set('dock_stat_galv', g && g.active ? `${g.display >= 0 ? '+' : '−'}${Math.abs(g.display).toFixed(2)} mA` : '— (미결선)');
+    set('dock_stat_freq', `${(calc.frequency || 0).toFixed(1)} Hz`);
+
+    // 경고 표시 (퓨즈 차단, 램프 과전압, 과속)
+    const warnEl = document.getElementById('dock_warnings');
+    if (warnEl) {
+      const msgs = [];
+      if (this.engine.state.shortDetails) msgs.push('⛔ ' + this.engine.state.shortDetails);
+      for (const w of (this.engine.state.warnings || [])) msgs.push('⚠️ ' + w);
+      if (Math.abs(rpm) >= 3550 && !GENERATOR_TYPES.has(mt) && ['DC_SERIES_MOTOR', 'DC_COMPOUND_MOTOR', 'PM_DC_MOTOR'].includes(mt)) msgs.push('⚠️ 과속 — 기계적 한계 속도 도달');
+      const html = msgs.map(m => `<div>${m}</div>`).join('');
+      if (warnEl.innerHTML !== html) warnEl.innerHTML = html;
+      warnEl.style.display = msgs.length ? 'block' : 'none';
+    }
   }
 
   /**
@@ -1094,15 +1126,13 @@ class SimulatorApp {
   renderFeedbackView() {
     const container = document.getElementById('feedback_content_target');
     if (!container) return;
-
     const evalResult = this.evaluator.evaluateExperiment(this.currentExpId);
     container.innerHTML = this.reportGen.generateReportHtml(evalResult);
-
-    // 그래프 렌더링
     setTimeout(() => {
       const canvas = document.getElementById('report_graph_canvas');
       if (canvas) {
-        const type = (this.currentExpId === 'EXP-07') ? 'LOAD' : 'SATURATION';
+        const loadLabs = ['GEN-07', 'GEN-09'];
+        const type = loadLabs.includes(this.currentExpId) ? 'LOAD' : 'SATURATION';
         this.reportGen.drawGraph(canvas, type);
       }
     }, 50);
@@ -1112,58 +1142,43 @@ class SimulatorApp {
    * 메인 60FPS 애니메이션 루프
    */
   loop(timestamp) {
-    const dt = (timestamp - this.lastTime) / 1000.0;
+    const dt = Math.min(0.1, Math.max(0, (timestamp - this.lastTime) / 1000.0));
     this.lastTime = timestamp;
 
-    // 1. 물리 엔진 업데이트
+    // 1. 회로·기계 물리 해석 (시간 적분)
     this.engine.update(dt);
-
-    // 2. 계철 프레임 로터, 모터 풀리 및 구동 벨트 60FPS 회전 애니메이션
-    const hasDriveMotor = this.engine.modules.has('IEG-6030-11');
-    const isGenerator = this.currentExpId.startsWith('GEN');
-    let rotorRpm = 0;
-    let motorRpm = 0;
-
-    // 수동 회전 중인 경우 자연스러운 회전 감속(inertia friction decay)
-    if (this.engine.state.manualRpm > 0) {
-      if (!this.engine.state.continuousSpin) {
-        // 단발 회전: 서서히 감속 (약 2.5초에 정지)
-        this.engine.state.manualRpm = Math.max(0, this.engine.state.manualRpm - dt * 120);
-      }
-      this.engine.solve();
+    const sd = this.engine.state.shortDetails || '';
+    if (sd && sd !== this.lastShortMsg) {
+      this.showToast('⛔ ' + sd);
+      this.moduleRenderer.syncSwitchesUI();
+      this.updateRunControls();
     }
+    this.lastShortMsg = sd;
+    const gv = Math.abs(this.engine.readings.M_GALVANO.display || 0);
+    if (this.engine.readings.M_GALVANO.active) this.engine.state.galvPeak = Math.max(this.engine.state.galvPeak || 0, gv);
 
-    if (hasDriveMotor) {
-      if (isGenerator) {
-        motorRpm = this.engine.state.autoDriverRpm;
-        rotorRpm = this.assembler.state.beltInstalled ? (motorRpm * 0.99) : 0;
-      } else {
-        rotorRpm = this.engine.state.rotorRpm || this.engine.state.autoDriverRpm;
-        motorRpm = 0;
-      }
-    } else {
-      // 구동 모터(11)가 없는 실습 (예: GEN-01)
-      if (this.engine.state.manualRpm > 0) {
-        rotorRpm = (this.engine.state.manualDir === 'CCW' ? -this.engine.state.manualRpm : this.engine.state.manualRpm);
-      } else {
-        rotorRpm = this.engine.state.rotorRpm || 0;
-      }
-      motorRpm = 0;
-    }
+    // 2. 회전자·풀리·벨트 애니메이션
+    this.assembler.updateAnimation(dt, this.engine.state.rotorAngle, this.engine.state.autoDriverRpm);
 
-    const isCcw = (hasDriveMotor ? (this.engine.state.autoDriverDir === 'CCW') : (this.engine.state.manualDir === 'CCW'));
-    this.assembler.updateAnimation(dt, rotorRpm, motorRpm, isCcw);
-
-    // 3. 계측기 바늘 지침 및 디스플레이 갱신
+    // 3. 계측기 표시
     this.moduleRenderer.updateMetersUI();
 
-    // 4. 모니터 도크 수치 갱신
-    this.updateMonitorDock();
-
-    // 5. 오실로스코프 렌더링
-    if (this.currentTab === 'workbench') {
-      this.scope.render();
+    // 4. 도크 및 운전 상태
+    this.frameCount = (this.frameCount || 0) + 1;
+    if (this.frameCount % 6 === 0) {
+      this.updateMonitorDock();
+      this.updateRunControls();
     }
+    // 전류 흐름 표시 on/off 변화 시 배선 재렌더
+    const calc = this.engine.state.calculatedValues || {};
+    const active = Math.abs(calc.genLoadCurr || 0) > 0.005 || Math.abs(calc.iField || 0) > 0.005 || (this.engine.isRunning() && Math.abs(calc.genTermVolt || 0) > 0.5);
+    if (active !== this.lastFlowActive) {
+      this.lastFlowActive = active;
+      this.cableUI.render();
+    }
+
+    // 5. 오실로스코프
+    if (this.currentTab === 'workbench') this.scope.render();
 
     requestAnimationFrame((t) => this.loop(t));
   }
