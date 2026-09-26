@@ -2,11 +2,11 @@
  * - HTML/JS/CSS: 네트워크 우선 (항상 최신 버전 사용, 오프라인일 때만 캐시)
  * - 이미지: 캐시 우선 (한 번 본 모듈·교재 이미지는 오프라인에서도 표시)
  */
-const CACHE = 'ieg6030-v16';
+const CACHE = 'ieg6030-v17';
 const CORE = [
   './', './index.html', './manifest.webmanifest',
-  './css/main.css?v=16', './css/workbench.css?v=16', './css/curriculum.css?v=16',
-  './js/app.js?v=16',
+  './css/main.css?v=17', './css/workbench.css?v=17', './css/curriculum.css?v=17',
+  './js/app.js?v=17',
   './assets/app/icon-192.png', './assets/app/icon-512.png'
 ];
 

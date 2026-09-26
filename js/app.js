@@ -183,9 +183,11 @@ class SimulatorApp {
     // 로고(IEG 6030 + 제목) 클릭 → 홈 화면(실습 장비)으로 이동
     const brand = document.querySelector('.header-brand');
     if (brand) {
+      // 앱을 처음 실행했을 때의 첫 화면으로 되돌림 (페이지 재시작, 언어 설정은 유지)
       const goHome = () => {
-        this.switchTab('workbench');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        const busy = (this.engine?.wires?.length > 0) || this.engine?.isRunning?.();
+        if (busy && !window.confirm(t('처음 화면으로 돌아갑니다. 현재 결선과 실습 진행 내용이 초기화됩니다. 계속할까요?'))) return;
+        window.location.href = window.location.pathname;
       };
       brand.addEventListener('click', goHome);
       brand.addEventListener('keydown', (e) => {

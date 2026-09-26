@@ -90,6 +90,7 @@ export const EN = {
   '실습 평가': 'Assessment',
   '결과 피드백': 'Feedback',
   '홈 화면으로 이동': 'Go to home screen',
+  '처음 화면으로 돌아갑니다. 현재 결선과 실습 진행 내용이 초기화됩니다. 계속할까요?': 'Return to the start screen? Current wiring and lab progress will be reset.',
   '📲 앱 설치': '📲 Install App',
   'ℹ️ 시스템 안내': 'ℹ️ About',
   '실습 과제:': 'Lab:',
