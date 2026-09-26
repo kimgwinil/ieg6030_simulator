@@ -179,6 +179,19 @@ class SimulatorApp {
         this.switchTab(tabKey);
       });
     });
+
+    // 로고(IEG 6030 + 제목) 클릭 → 홈 화면(실습 장비)으로 이동
+    const brand = document.querySelector('.header-brand');
+    if (brand) {
+      const goHome = () => {
+        this.switchTab('workbench');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      };
+      brand.addEventListener('click', goHome);
+      brand.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goHome(); }
+      });
+    }
   }
 
   switchTab(tabKey) {

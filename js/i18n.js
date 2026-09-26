@@ -89,6 +89,7 @@ export const EN = {
   '실습 장비': 'Workbench',
   '실습 평가': 'Assessment',
   '결과 피드백': 'Feedback',
+  '홈 화면으로 이동': 'Go to home screen',
   '📲 앱 설치': '📲 Install App',
   'ℹ️ 시스템 안내': 'ℹ️ About',
   '실습 과제:': 'Lab:',
