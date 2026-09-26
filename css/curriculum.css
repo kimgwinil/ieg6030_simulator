@@ -861,3 +861,8 @@
   line-height: 1.5;
 }
 
+
+/* 평가·보고서 카드가 내용 길이만큼 늘어나도록 (flex stretch로 화면 높이에 잘리던 문제) */
+.curriculum-view-container { align-items: flex-start; }
+#eval_content_target { align-items: flex-start; }
+.curriculum-card { height: auto; flex-shrink: 0; }

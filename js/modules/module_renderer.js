@@ -1,3 +1,4 @@
+import { t as tr } from '../i18n.js';
 /**
  * IEG-6030 실습 모듈 인터랙티브 렌더러 (정밀 보정 버전)
  * 실제 매뉴얼 패널 사진 + 실시간 조작 노브, 토글 스위치, 바늘 지침, 단자 잭 렌더링
@@ -30,7 +31,7 @@ export class ModuleRenderer {
              data-module="${def.id}"
              data-terminal="${t.id}"
              style="left: ${t.x}%; top: ${t.y}%;"
-             title="${def.name} - 단자 ${t.label}">
+             title="${tr('{name} - 단자 {label}', { name: tr(def.name), label: t.label })}">
           <div class="jack-core"></div>
           <span class="jack-label">${t.label}</span>
         </div>
@@ -43,7 +44,7 @@ export class ModuleRenderer {
         const val = this.engine.getControlValue(def.id, c.id, c.value);
         const ratio = (val - c.min) / (c.max - c.min);
         const angle = c.angleMin + ratio * (c.angleMax - c.angleMin);
-        const knobTitle = `${c.label}: 드래그 또는 마우스 휠로 조절`;
+        const knobTitle = tr('{label}: 드래그 또는 마우스 휠로 조절', { label: c.label });
         const sizePct = c.sizePercent || 38.0;
 
         controlsHtml += `
@@ -114,7 +115,7 @@ export class ModuleRenderer {
       lampsHtml += `
         <div class="lamp-socket ${installed ? '' : 'bulb-removed'}" id="lamp_${def.id}_${l.id}"
              data-module="${def.id}" data-lamp="${l.id}"
-             title="${l.label} 전구 (${l.rating}V) — 클릭하여 장착/분리"
+             title="${tr('{label} 전구 ({v}V) — 클릭하여 장착/분리', { label: l.label, v: l.rating })}"
              style="left: ${l.x}%; top: ${l.y}%;">
           <div class="lamp-bulb">
             <div class="lamp-filament"></div>
@@ -131,7 +132,7 @@ export class ModuleRenderer {
       if (m.type === 'digital_panel') {
         const themeClass = m.theme ? `theme-${m.theme}` : 'theme-cyan';
         metersHtml += `
-          <div class="digital-panel-meter ${themeClass}" id="meter_${m.id}" style="left: ${m.x}%; top: ${m.y}%; width: ${m.w}%; height: ${m.h}%;" title="${m.label}">
+          <div class="digital-panel-meter ${themeClass}" data-i18n-skip id="meter_${m.id}" style="left: ${m.x}%; top: ${m.y}%; width: ${m.w}%; height: ${m.h}%;" title="${m.label}">
            <div class="dpm-inner">
             <div class="dpm-header">
               <span class="dpm-title"><span class="t-full">${m.label}</span><span class="t-short">${m.short || m.label}</span></span>
@@ -289,7 +290,7 @@ export class ModuleRenderer {
       rsw.dataset.currIdx = currIdx;
       const opt = options[currIdx];
       rsw.style.transform = `rotate(${opt.angle}deg)`;
-      rsw.title = `${opt.label} (클릭하여 전환)`;
+      rsw.title = tr('{label} (클릭하여 전환)', { label: opt.label });
       this.engine.setControlValue(moduleId, controlId + '_idx', currIdx, true);
 
       if (controlId === 'MOTOR_DIR') {
@@ -427,7 +428,7 @@ export class ModuleRenderer {
       idx = Math.max(0, Math.min(options.length - 1, idx));
       h.dataset.currIdx = idx;
       h.style.transform = `rotate(${options[idx].angle}deg)`;
-      h.title = `${options[idx].label} (클릭하여 전환)`;
+      h.title = tr('{label} (클릭하여 전환)', { label: options[idx].label });
     });
     root.querySelectorAll('.knob-body').forEach(k => {
       const min = parseFloat(k.dataset.min), max = parseFloat(k.dataset.max);

@@ -1,3 +1,5 @@
+import { t, isEn } from '../i18n.js';
+import { EXPERIMENTS_EN } from './curriculum_en.js';
 /**
  * IEG-6030 실습 평가 및 실습문제 풀이 & 채점 엔진
  * 결선 적합성, 조립 적합성, 운전 조작 달성도 판정 및 매뉴얼 핵심 실습문제 10선
@@ -202,10 +204,10 @@ export class EvaluationEngine {
       if (!isMounted) modulePassed = false;
     }
     if (modulePassed) {
-      checklist.push({ item: '필수 모듈 랙 배치', passed: true, score: 20, desc: '요구된 모든 실험 모듈이 랙에 정상 장착되었습니다.' });
+      checklist.push({ item: t('필수 모듈 랙 배치'), passed: true, score: 20, desc: t('요구된 모든 실험 모듈이 랙에 정상 장착되었습니다.') });
       earnedScore += 20;
     } else {
-      checklist.push({ item: '필수 모듈 랙 배치', passed: false, score: 0, desc: '실습에 필요한 모듈 중 일부가 누락되었습니다.' });
+      checklist.push({ item: t('필수 모듈 랙 배치'), passed: false, score: 0, desc: t('실습에 필요한 모듈 중 일부가 누락되었습니다.') });
     }
 
     // 2. 기계 부품 조립 검사 (20점)
@@ -219,9 +221,9 @@ export class EvaluationEngine {
 
       if (rotorOk && beltOk) {
         assemblyScore = 20;
-        checklist.push({ item: '회전자 및 구동 벨트 조립', passed: true, score: 20, desc: '회전자 종류 및 구동 벨트 결합 상태가 완벽합니다.' });
+        checklist.push({ item: t('회전자 및 구동 벨트 조립'), passed: true, score: 20, desc: t('회전자 종류 및 구동 벨트 결합 상태가 완벽합니다.') });
       } else {
-        checklist.push({ item: '회전자 및 구동 벨트 조립', passed: false, score: 0, desc: `조립 오류: 회전자(${rotorOk ? '정상' : '불일치'}), 벨트 연결(${beltOk ? '정상' : '불일치'})` });
+        checklist.push({ item: t('회전자 및 구동 벨트 조립'), passed: false, score: 0, desc: t('조립 오류: 회전자({r}), 벨트 연결({b})', { r: rotorOk ? t('정상') : t('불일치'), b: beltOk ? t('정상') : t('불일치') }) });
       }
     } else {
       assemblyScore = 20;
@@ -242,10 +244,10 @@ export class EvaluationEngine {
     earnedScore += wireScore;
 
     checklist.push({
-      item: '회로 단자간 배선 결선',
+      item: t('회로 단자간 배선 결선'),
       passed: wireMatchedCount === targetWires.length,
       score: wireScore,
-      desc: `필수 배선 통전 상태: ${wireMatchedCount} / ${targetWires.length}개 완료 (${Math.round(wireRatio * 100)}%)`
+      desc: t('필수 배선 통전 상태: {m} / {n}개 완료 ({p}%)', { m: wireMatchedCount, n: targetWires.length, p: Math.round(wireRatio * 100) })
     });
 
     // 4. 운전 및 계측 동작 검사 (20점): 실습별 이론 기대 범위(verify) 충족 여부
@@ -256,25 +258,27 @@ export class EvaluationEngine {
       const abs = key.endsWith('_abs');
       const id = abs ? key.slice(0, -4) : key;
       const r = this.engine.readings[id];
-      if (!r || !r.active) return { ok: false, v: 0, unit: r ? r.unit : '', why: '계측기 미결선' };
-      if (r.ol) return { ok: false, v: r.value, unit: r.unit, why: '레인지 초과(OL)' };
+      if (!r || !r.active) return { ok: false, v: 0, unit: r ? r.unit : '', why: t('계측기 미결선') };
+      if (r.ol) return { ok: false, v: r.value, unit: r.unit, why: t('레인지 초과(OL)') };
       return { ok: true, v: abs ? Math.abs(r.display) : r.display, unit: r.unit };
     };
-    const checks = (exp.verify || []).map(c => {
+    const enLabels = isEn() && EXPERIMENTS_EN[exp.id] ? EXPERIMENTS_EN[exp.id].verifyLabels || [] : [];
+    const checks = (exp.verify || []).map((c, i) => {
       const m = val(c.key);
       const pass = m.ok && m.v >= c.min && m.v <= c.max;
-      return { ...c, pass, text: `${c.label}: ${m.ok ? m.v.toFixed(m.unit === 'rpm' ? 0 : 2) + ' ' + m.unit : m.why} (기준 ${c.min}~${c.max})` };
+      const label = enLabels[i] || c.label;
+      return { ...c, pass, text: t('{label}: {v} (기준 {min}~{max})', { label, v: m.ok ? m.v.toFixed(m.unit === 'rpm' ? 0 : 2) + ' ' + m.unit : m.why, min: c.min, max: c.max }) };
     });
     const allPass = checks.length > 0 && checks.every(c => c.pass);
     const opScore = checks.length === 0 ? 20 : Math.round(20 * checks.filter(c => c.pass).length / checks.length);
     earnedScore += opScore;
 
     checklist.push({
-      item: '장비 운전 및 계측 결과',
+      item: t('장비 운전 및 계측 결과'),
       passed: allPass,
       score: opScore,
       desc: checks.length ? checks.map(c => `${c.pass ? '✓' : '✕'} ${c.text}`).join(' / ')
-        : '운전 판정 기준 없음'
+        : t('운전 판정 기준 없음')
     });
 
     return {

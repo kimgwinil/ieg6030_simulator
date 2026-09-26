@@ -1,3 +1,4 @@
+import { t } from '../i18n.js';
 /**
  * IEG-6030 회로망 해석 및 전기기계 연동 시뮬레이션 엔진 (v2)
  *
@@ -470,16 +471,16 @@ export class CircuitEngine {
       let worst = 0, worstName = '';
       for (const tap of PSU_TAPS) {
         const i = C.abs(ac60.branchI(`TAP_${tap.term}`));
-        if (i > worst) { worst = i; worstName = `AC ${tap.v}V 탭`; }
+        if (i > worst) { worst = i; worstName = t('AC {v}V 탭', { v: tap.v }); }
       }
       const idc = Math.abs(dcs.branchI('PSU_DC')[0]);
-      if (idc > worst) { worst = idc; worstName = 'DC 출력'; }
+      if (idc > worst) { worst = idc; worstName = t('DC 출력'); }
       // 퓨즈 특성: 정격 1.5배 초과 즉시 차단, 정격 초과가 1.5초 이상 지속되면 차단
       if (worst > PSU_FUSE_A) st.overTime = (st.overTime || 0) + dt; else st.overTime = 0;
       if (worst > PSU_FUSE_A * 1.5 || st.overTime > 1.5) {
         st.overTime = 0;
         st.shortCircuit = true;
-        st.shortDetails = `전원공급기 ${worstName} 과전류 ${worst.toFixed(1)}A → 퓨즈(3A) 차단. 결선(단락)을 확인하세요.`;
+        st.shortDetails = t('전원공급기 {name} 과전류 {a}A → 퓨즈(3A) 차단. 결선(단락)을 확인하세요.', { name: worstName, a: worst.toFixed(1) });
         st.powerSupplyOn = false;
         this.setControlValue(P, 'MAIN_POWER_SW', false, true);
         return this.solve(0);
@@ -522,8 +523,8 @@ export class CircuitEngine {
     for (const [mod, vId, aId, isAC] of [['IEG-6030-08', 'M_DC_V', 'M_DC_A', false], ['IEG-6030-07', 'M_AC_V', 'M_AC_A', true]]) {
       if (!has(mod)) { setReading(vId, 0, 50, '', false); setReading(aId, 0, 5, '', false); continue; }
       const d = meterRead(mod, isAC);
-      setReading(vId, d.vVal, d.vr ? d.vr.fs : 50, d.vr ? fmtV(d.vr) : '미결선', !!d.vr);
-      setReading(aId, d.aVal, d.ar ? d.ar.fs : 5, d.ar ? fmtA(d.ar) : '미결선', !!d.ar);
+      setReading(vId, d.vVal, d.vr ? d.vr.fs : 50, d.vr ? fmtV(d.vr) : t('미결선'), !!d.vr);
+      setReading(aId, d.aVal, d.ar ? d.ar.fs : 5, d.ar ? fmtA(d.ar) : t('미결선'), !!d.ar);
     }
 
     // 09 검류계 (직류 + 저주파 교류 순시값: 가동코일형 지침은 수 Hz 이하에서 좌우로 흔들림)
@@ -555,7 +556,7 @@ export class CircuitEngine {
         const ratio = vrms / vr;
         lampBrightness[key] = Math.max(0, Math.min(1, (ratio - 0.15) / 0.85));
         lampOver[key] = ratio > 1.3;
-        if (ratio > 1.3) warnings.push(`${modId.slice(-2)}번 ${lid} 램프 과전압 (${vrms.toFixed(1)}V / 정격 ${vr}V) — 필라멘트 단선 위험`);
+        if (ratio > 1.3) warnings.push(t('{m}번 {lid} 램프 과전압 ({v}V / 정격 {r}V) — 필라멘트 단선 위험', { m: modId.slice(-2), lid, v: vrms.toFixed(1), r: vr }));
       }
     }
 
@@ -790,7 +791,7 @@ export class CircuitEngine {
     } else if (['DC_GEN', 'PM_DC_GEN'].includes(mt) && Math.abs(vArm) > 0.05) {
       // 2극 전기자 + 2편 정류자: 전파정류 파형 (평균 = 2Vm/π)
       const vm = vArm * Math.PI / 2;
-      Object.assign(sd, { type: 'rectified', traces: [{ amp: vm, phase: 0 }], freq: f, vpp: Math.abs(vm), label: '정류 출력 A-B (평균 ' + vArm.toFixed(1) + 'V)' });
+      Object.assign(sd, { type: 'rectified', traces: [{ amp: vm, phase: 0 }], freq: f, vpp: Math.abs(vm), label: '정류 출력 A-B (평균 {v}V)', labelVars: { v: vArm.toFixed(1) } });
     } else if (Math.abs(vArm) > 0.05 && ['PM_DC_MOTOR', 'DC_SERIES_MOTOR', 'DC_COMPOUND_MOTOR', 'ROTARY_CONV'].includes(mt)) {
       Object.assign(sd, { type: 'dc', traces: [{ amp: vArm, phase: 0 }], freq: 0, vpp: 0, label: mt === 'ROTARY_CONV' ? '직류 출력 C-D' : '전기자 전압 A-B' });
     } else if (Math.abs(vArm) > 0.05) {

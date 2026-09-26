@@ -1,3 +1,4 @@
+import { t } from '../i18n.js';
 /**
  * IEG-6030 가상 디지털 스토리지 오실로스코프 (DSO)
  * 매뉴얼 실습 01, 02, 08, 10 등에 명시된 기전력 파형 측정 계측기
@@ -219,8 +220,8 @@ export class VirtualOscilloscope {
     const peak = Math.abs((sd.traces || [])[0]?.amp || 0);
     let meas;
     if (sd.type === 'dc') meas = `DC ${peak.toFixed(2)}V`;
-    else if (sd.type === 'rectified') meas = `Vp ${peak.toFixed(1)}V · 평균 ${(peak * 2 / Math.PI).toFixed(1)}V`;
-    else if (sd.type === 'none') meas = '신호 없음';
+    else if (sd.type === 'rectified') meas = t('Vp {p}V · 평균 {a}V', { p: peak.toFixed(1), a: (peak * 2 / Math.PI).toFixed(1) });
+    else if (sd.type === 'none') meas = t('신호 없음');
     else meas = `Vpp ${(peak * 2).toFixed(1)}V · ${(peak / Math.SQRT2).toFixed(1)}Vrms`;
     ctx.textAlign = 'left';
     ctx.fillText(`f ${f.toFixed(1)}Hz`, 6, h - 4);
@@ -230,7 +231,7 @@ export class VirtualOscilloscope {
       ctx.textAlign = 'left';
       ctx.fillStyle = '#94a3b8';
       ctx.textBaseline = 'top';
-      ctx.fillText(sd.type === 'sine3' ? 'A/B/C-N' : sd.label, 6, 5 + font + 3);
+      ctx.fillText(sd.type === 'sine3' ? 'A/B/C-N' : t(sd.label, sd.labelVars), 6, 5 + font + 3);
     }
     ctx.textAlign = 'left';
     ctx.textBaseline = 'alphabetic';

@@ -1,4 +1,5 @@
 import { occDc, MACHINE } from '../engine/machine_models.js';
+import { t } from '../i18n.js';
 
 /**
  * IEG-6030 실습 피드백 및 종합 실험 보고서(Report) 생성기
@@ -23,29 +24,29 @@ export class ReportGenerator {
     const freq = (calc.frequency || 0).toFixed(1);
 
     // 운전 상태 및 동작 판정
-    let status = '정상 운전';
+    let status = t('정상 운전');
     let statusClass = 'normal';
     if (this.engine.state.shortCircuit) {
-      status = '단락(Short) 차단';
+      status = t('단락(Short) 차단');
       statusClass = 'danger';
     } else if (rpm === 0 && Math.abs(parseFloat(galv)) > 0.05) {
-      status = '수동 유도 기전력 검출';
+      status = t('수동 유도 기전력 검출');
       statusClass = 'normal';
     } else if (rpm > 0 && Math.abs(parseFloat(vTerm)) >= 1.0) {
-      status = parseFloat(iLoad) > 0.05 ? '부하 운전 발전' : '무부하 정격 발전';
+      status = parseFloat(iLoad) > 0.05 ? t('부하 운전 발전') : t('무부하 정격 발전');
       statusClass = 'normal';
     } else if (rpm > 0 && Math.abs(parseFloat(vTerm)) < 1.0) {
-      status = '미여자/무기전력 회전';
+      status = t('미여자/무기전력 회전');
       statusClass = 'warn';
     } else if (rpm === 0) {
-      status = '정지(STOP)';
+      status = t('정지(STOP)');
       statusClass = 'warn';
     }
 
     const pt = {
       id: this.recordedData.length + 1,
       time: new Date().toLocaleTimeString(),
-      labName: labName || '현재 실습',
+      labName: labName || t('현재 실습'),
       rpm,
       vSupply: (calc.psuDcVolts || 0).toFixed(1),
       iField,
@@ -116,11 +117,11 @@ export class ReportGenerator {
     ctx.fillStyle = '#cbd5e1';
     ctx.font = '11px sans-serif';
     if (type === 'SATURATION') {
-      ctx.fillText('단자 전압 V [V]', 10, 20);
-      ctx.fillText('계자 전류 If [mA]', padL + plotW - 40, h - 10);
+      ctx.fillText(t('단자 전압 V [V]'), 10, 20);
+      ctx.textAlign = 'right'; ctx.fillText(t('계자 전류 If [mA]'), padL + plotW, h - 10); ctx.textAlign = 'left';
     } else {
-      ctx.fillText('단자 전압 V [V]', 10, 20);
-      ctx.fillText('부하 전류 IL [A]', padL + plotW - 40, h - 10);
+      ctx.fillText(t('단자 전압 V [V]'), 10, 20);
+      ctx.textAlign = 'right'; ctx.fillText(t('부하 전류 IL [A]'), padL + plotW, h - 10); ctx.textAlign = 'left';
     }
 
     // 이론적 기준 곡선 (점선)
@@ -207,7 +208,7 @@ export class ReportGenerator {
     });
 
     if (this.recordedData.length === 0) {
-      rowsHtml = `<tr><td colspan="6" style="text-align:center; color:#94a3b8;">측정된 데이터가 없습니다. 실습 중 [데이터 기록] 버튼을 누르세요.</td></tr>`;
+      rowsHtml = `<tr><td colspan="6" style="text-align:center; color:#94a3b8;">${t('측정된 데이터가 없습니다. 실습 중 [데이터 기록] 버튼을 누르세요.')}</td></tr>`;
     }
 
     let checklistHtml = '';
@@ -215,8 +216,8 @@ export class ReportGenerator {
       evalResult.checklist.forEach(c => {
         checklistHtml += `
           <div class="report-eval-item ${c.passed ? 'passed' : 'failed'}">
-            <span class="eval-badge">${c.passed ? '✓ 통과' : '✕ 미흡'}</span>
-            <strong>${c.item}</strong> (${c.score}점): ${c.desc}
+            <span class="eval-badge">${c.passed ? t('✓ 통과') : t('✕ 미흡')}</span>
+            <strong>${c.item}</strong> (${t('{n}점', { n: c.score })}): ${c.desc}
           </div>
         `;
       });
@@ -225,16 +226,16 @@ export class ReportGenerator {
     return `
       <div class="experiment-report-sheet">
         <div class="report-header">
-          <h2>전기기계 구조 실습장비 (IEG-6030) 실습 보고서</h2>
+          <h2>${t('전기기계 구조 실습장비 (IEG-6030) 실습 보고서')}</h2>
           <div class="report-meta">
-            <span><strong>실습 번호:</strong> ${evalResult ? evalResult.expId : '-'}</span>
-            <span><strong>일시:</strong> ${new Date().toLocaleString()}</span>
-            <span><strong>종합 점수:</strong> <span class="score-highlight">${evalResult ? evalResult.totalScore : 0}점 / 100점</span></span>
+            <span><strong>${t('실습 번호:')}</strong> ${evalResult ? evalResult.expId : '-'}</span>
+            <span><strong>${t('일시:')}</strong> ${new Date().toLocaleString()}</span>
+            <span><strong>${t('종합 점수:')}</strong> <span class="score-highlight">${t('{n}점 / 100점', { n: evalResult ? evalResult.totalScore : 0 })}</span></span>
           </div>
         </div>
 
         <div class="report-section">
-          <h3>1. 실습 평가 및 체크리스트</h3>
+          <h3>${t('1. 실습 평가 및 체크리스트')}</h3>
           <div class="eval-checklist-box">
             ${checklistHtml}
           </div>
@@ -242,19 +243,19 @@ export class ReportGenerator {
 
         <div class="report-section">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <h3 style="margin:0;">2. 실습 계측 데이터 기록표 (${this.recordedData.length}건)</h3>
+            <h3 style="margin:0;">${t('2. 실습 계측 데이터 기록표 ({n}건)', { n: this.recordedData.length })}</h3>
             <div style="display:flex; gap:6px;">
               <button class="btn btn-sm" style="background:#10b981; color:#fff; border-color:#10b981;" onclick="window.app.reportGen.exportToCsv()">
-                📥 CSV 다운로드
+                ${t('📥 CSV 다운로드')}
               </button>
               <button class="btn btn-sm" style="background:#059669; color:#fff; border-color:#059669;" onclick="window.app.reportGen.exportToExcel()">
-                📊 Excel 다운로드
+                ${t('📊 Excel 다운로드')}
               </button>
               <button class="btn btn-sm" style="background:#0284c7; color:#fff; border-color:#0284c7;" onclick="window.app.reportGen.exportToPdf()">
-                📄 PDF 저장/인쇄
+                ${t('📄 PDF 저장/인쇄')}
               </button>
-              <button class="btn btn-sm btn-danger" onclick="if(confirm('기록된 측정 데이터를 초기화하시겠습니까?')){ window.app.reportGen.clearData(); window.app.renderFeedbackView(); window.app.renderLiveMeasurementTable(); }">
-                🗑️ 초기화
+              <button class="btn btn-sm btn-danger" onclick="if(confirm('${t('기록된 측정 데이터를 초기화하시겠습니까?')}')){ window.app.reportGen.clearData(); window.app.renderFeedbackView(); window.app.renderLiveMeasurementTable(); }">
+                ${t('🗑️ 초기화')}
               </button>
             </div>
           </div>
@@ -262,11 +263,11 @@ export class ReportGenerator {
             <thead>
               <tr>
                 <th>No</th>
-                <th>측정 시각</th>
-                <th>회전 속도 (RPM)</th>
-                <th>계자 전류 (If)</th>
-                <th>발전 단자전압 (V)</th>
-                <th>부하 전류 (IL)</th>
+                <th>${t('측정 시각')}</th>
+                <th>${t('회전 속도 (RPM)')}</th>
+                <th>${t('계자 전류 (If)')}</th>
+                <th>${t('발전 단자전압 (V)')}</th>
+                <th>${t('부하 전류 (IL)')}</th>
               </tr>
             </thead>
             <tbody>
@@ -276,24 +277,24 @@ export class ReportGenerator {
         </div>
 
         <div class="report-section">
-          <h3>3. 특성 곡선 그래프 분석</h3>
+          <h3>${t('3. 특성 곡선 그래프 분석')}</h3>
           <div class="report-graph-wrap">
             <canvas id="report_graph_canvas"></canvas>
-            <p class="graph-caption">※ 점선: 시뮬레이터 모델 이론 곡선 (포화곡선 E = 1.8 + 50·tanh(If/0.28) @1800rpm / 외부특성 V = E0 − IL·4.5Ω), 실선 및 포인트: 사용자 계측 기록</p>
+            <p class="graph-caption">${t('※ 점선: 시뮬레이터 모델 이론 곡선 (포화곡선 E = 1.8 + 50·tanh(If/0.28) @1800rpm / 외부특성 V = E0 − IL·4.5Ω), 실선 및 포인트: 사용자 계측 기록')}</p>
           </div>
         </div>
 
         <div class="report-section">
-          <h3>4. 기술 분석 및 피드백</h3>
+          <h3>${t('4. 기술 분석 및 피드백')}</h3>
           <div class="feedback-text">
             ${this.getFeedbackText(evalResult)}
           </div>
         </div>
 
         <div class="report-footer" style="display:flex; justify-content:center; gap:12px;">
-          <button class="btn btn-primary" onclick="window.app.reportGen.exportToPdf()">🖨️ 보고서 인쇄 및 PDF 저장</button>
-          <button class="btn" style="background:#10b981; color:#fff;" onclick="window.app.reportGen.exportToCsv()">📥 데이터 CSV 저장</button>
-          <button class="btn" style="background:#059669; color:#fff;" onclick="window.app.reportGen.exportToExcel()">📊 데이터 Excel 저장</button>
+          <button class="btn btn-primary" onclick="window.app.reportGen.exportToPdf()">${t('🖨️ 보고서 인쇄 및 PDF 저장')}</button>
+          <button class="btn" style="background:#10b981; color:#fff;" onclick="window.app.reportGen.exportToCsv()">${t('📥 데이터 CSV 저장')}</button>
+          <button class="btn" style="background:#059669; color:#fff;" onclick="window.app.reportGen.exportToExcel()">${t('📊 데이터 Excel 저장')}</button>
         </div>
       </div>
     `;
@@ -301,15 +302,9 @@ export class ReportGenerator {
 
   getFeedbackText(evalResult) {
     if (!evalResult || evalResult.totalScore >= 80) {
-      return `
-        <p><strong>우수한 실습 성과:</strong> 전기기계의 전자기 유도 특성과 발전기-부하 간의 전기적 특성을 정확히 이해하고 올바른 결선 및 안정된 운전 조작을 달성하였습니다.</p>
-        <p>계자 저항 변화에 따른 자화 곡선상의 포화 특성을 명확히 관찰하였으며, 계측기 측정값이 매뉴얼 권장 허용 범위 내에 잘 부합합니다.</p>
-      `;
+      return t('<p><strong>우수한 실습 성과:</strong> 전기기계의 전자기 유도 특성과 발전기-부하 간의 전기적 특성을 정확히 이해하고 올바른 결선 및 안정된 운전 조작을 달성하였습니다.</p><p>계자 저항 변화에 따른 자화 곡선상의 포화 특성을 명확히 관찰하였으며, 계측기 측정값이 매뉴얼 권장 허용 범위 내에 잘 부합합니다.</p>');
     } else {
-      return `
-        <p><strong>보완 권장 사항:</strong> 회로 배선에서 일부 단자가 누락되었거나 구동 모터 속도가 정격(1800 RPM)에 미달하였습니다.</p>
-        <p>매뉴얼의 실습 결선도를 다시 확인하고, 계자 권선의 극성과 전압계의 접속 단자(V_50V 및 COM)가 올바르게 연결되었는지 점검하시기 바랍니다.</p>
-      `;
+      return t('<p><strong>보완 권장 사항:</strong> 회로 배선에서 일부 단자가 누락되었거나 구동 모터 속도가 정격(1800 RPM)에 미달하였습니다.</p><p>매뉴얼의 실습 결선도를 다시 확인하고, 계자 권선의 극성과 전압계의 접속 단자(V_50V 및 COM)가 올바르게 연결되었는지 점검하시기 바랍니다.</p>');
     }
   }
 
@@ -318,11 +313,11 @@ export class ReportGenerator {
    */
   exportToCsv() {
     if (this.recordedData.length === 0) {
-      alert('기록된 계측 데이터가 없습니다. 워크벤치에서 [데이터 기록]을 먼저 진행하세요.');
+      alert(t('기록된 계측 데이터가 없습니다. 워크벤치에서 [데이터 기록]을 먼저 진행하세요.'));
       return;
     }
 
-    let csv = '\uFEFFNo,측정시각,실습과제,회전속도(RPM),계자전류(mA),발전단자전압(V),부하전류(A),검류계전류(mA),주파수(Hz),운전상태판정\r\n';
+    let csv = '\uFEFF' + t('No,측정시각,실습과제,회전속도(RPM),계자전류(mA),발전단자전압(V),부하전류(A),검류계전류(mA),주파수(Hz),운전상태판정') + '\r\n';
     this.recordedData.forEach((row, i) => {
       csv += `${i + 1},"${row.time}","${row.labName}",${row.rpm},${row.iField},${row.vTerm},${row.iLoad},${row.galv},${row.freq},"${row.status}"\r\n`;
     });
@@ -332,7 +327,7 @@ export class ReportGenerator {
     const a = document.createElement('a');
     const timeStr = new Date().toISOString().slice(0, 19).replace(/[-:T]/g, '');
     a.href = url;
-    a.download = `IEG6030_실습계측데이터_${timeStr}.csv`;
+    a.download = `${t('IEG6030_실습계측데이터')}_${timeStr}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -344,7 +339,7 @@ export class ReportGenerator {
    */
   exportToExcel() {
     if (this.recordedData.length === 0) {
-      alert('기록된 계측 데이터가 없습니다. 워크벤치에서 [데이터 기록]을 먼저 진행하세요.');
+      alert(t('기록된 계측 데이터가 없습니다. 워크벤치에서 [데이터 기록]을 먼저 진행하세요.'));
       return;
     }
 
@@ -378,21 +373,21 @@ export class ReportGenerator {
         </style>
       </head>
       <body>
-        <h3>IEG-6030 전기기계 구조 실습 계측 데이터 기록표</h3>
-        <p>기록 일시: ${new Date().toLocaleString()}</p>
+        <h3>${t('IEG-6030 전기기계 구조 실습 계측 데이터 기록표')}</h3>
+        <p>${t('기록 일시: {d}', { d: new Date().toLocaleString() })}</p>
         <table>
           <thead>
             <tr>
               <th>No</th>
-              <th>측정 시각</th>
-              <th>실습 과제</th>
-              <th>회전 속도 (RPM)</th>
-              <th>계자 전류 (mA)</th>
-              <th>발전 단자전압 (V)</th>
-              <th>부하 전류 (A)</th>
-              <th>검류계 전류 (mA)</th>
-              <th>발전 주파수 (Hz)</th>
-              <th>운전 상태 판정</th>
+              <th>${t('측정 시각')}</th>
+              <th>${t('실습 과제')}</th>
+              <th>${t('회전 속도 (RPM)')}</th>
+              <th>${t('계자 전류 (mA)')}</th>
+              <th>${t('발전 단자전압 (V)')}</th>
+              <th>${t('부하 전류 (A)')}</th>
+              <th>${t('검류계 전류 (mA)')}</th>
+              <th>${t('발전 주파수 (Hz)')}</th>
+              <th>${t('운전 상태 판정')}</th>
             </tr>
           </thead>
           <tbody>
@@ -408,7 +403,7 @@ export class ReportGenerator {
     const a = document.createElement('a');
     const timeStr = new Date().toISOString().slice(0, 19).replace(/[-:T]/g, '');
     a.href = url;
-    a.download = `IEG6030_실습데이터_${timeStr}.xls`;
+    a.download = `${t('IEG6030_실습데이터')}_${timeStr}.xls`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

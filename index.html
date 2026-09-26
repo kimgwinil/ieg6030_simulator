@@ -14,9 +14,9 @@
   <meta name="apple-mobile-web-app-title" content="IEG-6030">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <!-- 스타일시트 로드 -->
-  <link rel="stylesheet" href="css/main.css?v=12">
-  <link rel="stylesheet" href="css/workbench.css?v=12">
-  <link rel="stylesheet" href="css/curriculum.css?v=12">
+  <link rel="stylesheet" href="css/main.css?v=13">
+  <link rel="stylesheet" href="css/workbench.css?v=13">
+  <link rel="stylesheet" href="css/curriculum.css?v=13">
 </head>
 <body>
 
@@ -45,8 +45,12 @@
     </nav>
 
     <div class="header-actions">
+      <div class="lang-toggle" role="group" aria-label="한국어 / English" data-i18n-skip>
+        <button type="button" class="lang-btn" data-lang="ko" title="한국어">한국어</button>
+        <button type="button" class="lang-btn" data-lang="en" title="English">EN</button>
+      </div>
       <button id="btn_install_app" class="btn btn-sm" style="display:none; background:#16a34a; border-color:#16a34a;" title="이 시뮬레이터를 컴퓨터/태블릿에 앱으로 설치합니다">📲 앱 설치</button>
-      <button class="btn btn-sm" onclick="alert('IEG-6030 전기기계 구조 실습장비 통합 시뮬레이터\n\n· 회로망 해석(절점해석) 기반: 결선한 대로 전압·전류가 계산됩니다.\n· 디지털 메터는 선택한 레인지 단자 기준 실제값을 표시하며, 레인지 초과 시 OL을 표시합니다.\n· 발전기 특성은 1800rpm 기준, 2극 기기(f = n/60)로 모델링되어 있습니다.')">ℹ️ 시스템 안내</button>
+      <button class="btn btn-sm" onclick="window.app.showAbout()">ℹ️ 시스템 안내</button>
     </div>
   </header>
 
@@ -407,7 +411,7 @@
   </main>
 
   <!-- 애플리케이션 모듈 진입 스크립트 -->
-  <script type="module" src="js/app.js?v=12"></script>
+  <script type="module" src="js/app.js?v=13"></script>
   <script>
     // 앱 설치(PWA): 서비스 워커 등록 + 설치 버튼
     if ('serviceWorker' in navigator && location.protocol !== 'file:') {

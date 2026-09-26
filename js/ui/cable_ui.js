@@ -1,3 +1,4 @@
+import { t } from '../i18n.js';
 import { MODULE_DEFS } from '../modules/module_defs.js';
 
 /**
@@ -307,7 +308,7 @@ export class CableUI {
     this.selectedWireId = wireId;
     this.render();
     if (wireId && window.app && window.app.showToast) {
-      window.app.showToast('선택한 전선: 더블클릭 또는 Delete 키로 삭제 (Esc: 선택 해제)');
+      window.app.showToast(t('선택한 전선: 더블클릭 또는 Delete 키로 삭제 (Esc: 선택 해제)'));
     }
   }
 
