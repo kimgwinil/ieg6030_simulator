@@ -14,9 +14,9 @@
   <meta name="apple-mobile-web-app-title" content="IEG-6030">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <!-- 스타일시트 로드 -->
-  <link rel="stylesheet" href="css/main.css?v=13">
-  <link rel="stylesheet" href="css/workbench.css?v=13">
-  <link rel="stylesheet" href="css/curriculum.css?v=13">
+  <link rel="stylesheet" href="css/main.css?v=15">
+  <link rel="stylesheet" href="css/workbench.css?v=15">
+  <link rel="stylesheet" href="css/curriculum.css?v=15">
 </head>
 <body>
 
@@ -49,8 +49,8 @@
         <button type="button" class="lang-btn" data-lang="ko" title="한국어">한국어</button>
         <button type="button" class="lang-btn" data-lang="en" title="English">EN</button>
       </div>
-      <button id="btn_install_app" class="btn btn-sm" style="display:none; background:#16a34a; border-color:#16a34a;" title="이 시뮬레이터를 컴퓨터/태블릿에 앱으로 설치합니다">📲 앱 설치</button>
       <button class="btn btn-sm" onclick="window.app.showAbout()">ℹ️ 시스템 안내</button>
+      <span class="design-credit" data-i18n-skip>Design by gikim</span>
     </div>
   </header>
 
@@ -411,26 +411,12 @@
   </main>
 
   <!-- 애플리케이션 모듈 진입 스크립트 -->
-  <script type="module" src="js/app.js?v=13"></script>
+  <script type="module" src="js/app.js?v=15"></script>
   <script>
-    // 앱 설치(PWA): 서비스 워커 등록 + 설치 버튼
+    // 오프라인 캐시(서비스 워커) 등록
     if ('serviceWorker' in navigator && location.protocol !== 'file:') {
       window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
     }
-    let deferredInstall = null;
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredInstall = e;
-      const b = document.getElementById('btn_install_app');
-      if (b) b.style.display = 'inline-block';
-    });
-    document.addEventListener('click', async (e) => {
-      if (e.target.id !== 'btn_install_app' || !deferredInstall) return;
-      deferredInstall.prompt();
-      await deferredInstall.userChoice;
-      deferredInstall = null;
-      e.target.style.display = 'none';
-    });
   </script>
 </body>
 </html>

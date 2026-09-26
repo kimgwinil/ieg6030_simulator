@@ -422,4 +422,14 @@ body {
 .lang-btn + .lang-btn { border-left: 1px solid #334155; }
 .lang-btn.active { background: #0284c7; color: #fff; }
 .lang-btn:focus-visible { outline: 2px solid #38bdf8; outline-offset: -2px; }
-.header-actions { display: flex; align-items: center; }
+.header-actions { display: flex; align-items: center; flex-shrink: 0; white-space: nowrap; }
+.lang-btn { white-space: nowrap; }
+.curriculum-tabs { min-width: 0; }
+
+/* 제작 표기 (언어와 무관하게 영어 고정) */
+.design-credit { margin-left: 10px; font-size: 11px; color: #94a3b8; letter-spacing: .02em; white-space: nowrap; }
+@media (max-width: 900px) { .design-credit { display: none; } }
+.curriculum-tab-btn { white-space: nowrap; }
+@media (max-width: 1400px) { .brand-sub { display: none; } }
+@media (max-width: 1200px) { .design-credit { display: none; } }
+.brand-title { white-space: nowrap; }
